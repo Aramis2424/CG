@@ -131,6 +131,12 @@ def scale_up(event):
 def scale_down(event):
     scale(dots_list, 0.9)
 
+def scale_com(event):
+    if event.delta == -120:
+        scale_down(event)
+    elif event.delta == 120:
+        scale_up(event)
+
 def listbox_select_event(event, listbox, dots_list):
     global RESULT
     if not RESULT:
@@ -415,8 +421,9 @@ def main():
 
     #Команды
     root.bind("<Control-z>", lambda e: previous_state_event(e, dots_list))
-    root.bind("<Up>", scale_up)
-    root.bind("<Down>", scale_down)
+    root.bind("<Control-MouseWheel>", scale_com)
+    root.bind("<Control-Up>", scale_up)
+    root.bind("<Control-Down>", scale_down)
 
     draw_picture_by_dots(figure_arr)
     root.mainloop()

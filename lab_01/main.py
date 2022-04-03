@@ -377,8 +377,8 @@ def main():
 
     #Команды
     root.bind("<Control-z>", lambda e: previous_state_event(e, dots_list))
-    root.bind("<Up>", scale_up)
-    root.bind("<Down>", scale_down)
+    root.bind("<Control-Up>", scale_up)
+    root.bind("<Control-Down>", scale_down)
     root.mainloop()
 
 if __name__ == "__main__":
