@@ -314,9 +314,47 @@ def edit_event(listbox, dots_list):
         listbox.delete(len(dots_list) - 1)
         listbox.insert(END, x)
 
+
+def read_dots(name):
+    form = []
+    figure = []
+    file_dots = open(name, 'r')
+    try:
+        string = file_dots.readline()
+        while string:
+            if string == '\n':
+                figure.append(form.copy())
+                form.clear()
+            else:
+                string = list(map(float, string.split()))
+                form.append(string)
+            string = file_dots.readline()
+    finally:
+        file_dots.close()
+
+    return figure
+
+
+def draw_picture_by_dots(figure):
+    for form in figure:
+        for dot in form:
+            canvas.create_polygon(form, fill="#148012", outline="#fff", width=3)
+
 def main():
+
     global dots_list, dots_listbox, canvas
     dots_list = []
+
+
+    file_name = 'dots.txt'
+    figure_arr = read_dots(file_name)
+    #print(figure_arr)
+
+    for form in figure_arr:
+        for dot in figure_arr:
+            dots_list.extend(dot)
+    #print(dots_list)
+
 
 
     #Окно
@@ -379,6 +417,8 @@ def main():
     root.bind("<Control-z>", lambda e: previous_state_event(e, dots_list))
     root.bind("<Up>", scale_up)
     root.bind("<Down>", scale_down)
+
+    draw_picture_by_dots(figure_arr)
     root.mainloop()
 
 if __name__ == "__main__":
