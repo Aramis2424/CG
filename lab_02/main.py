@@ -128,6 +128,8 @@ def draw_picture_by_dots(figure):
                                   width=3)
 
 def shift_picture(figure, dx, dy):
+    global last_activity
+    last_activity = figure.copy()
     try:
         dx = int(dx)
         dy = -int(dy)
@@ -142,6 +144,12 @@ def shift_picture(figure, dx, dy):
             dot[1] += dy
     canvas.delete("all")
     draw_picture_by_dots(figure)
+
+def last_event(event, last_arr):
+    global dots_list, last_activity
+    del_all_dots(dots_list)
+    dots_list = last_activity.copy()
+    draw_picture_by_dots(dots_list)
 
 def main():
     global dots_list, dots_listbox, canvas
@@ -253,7 +261,7 @@ def main():
                         del_all_dots(dots_list))
 
     #Команды
-    root.bind("<Control-z>", lambda e: previous_state_event(e, dots_list))
+    root.bind("<Control-z>", lambda e: last_event(e, last_activity))
     root.bind("<Control-MouseWheel>", scale_com)
     root.bind("<Control-Up>", scale_up)
     root.bind("<Control-Down>", scale_down)
