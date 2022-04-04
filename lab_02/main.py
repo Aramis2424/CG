@@ -4,7 +4,10 @@ from tkinter import Tk, Button, Label, Entry, END, Listbox, Canvas, messagebox, 
 
 WIDTH = 1000
 HEIGHT = 600
+CENTER = (350, 300)
 RADIUS = 3
+
+file_name = 'dots.txt'
 
 EPS = 1e-8
 
@@ -13,23 +16,8 @@ RESULT = False
 last_activity = []
 
 
-TASK = "Нарисовать рисунок медведицы, затем его переместить,"+\
+TASK = "Нарисовать рисунок медведицы, затем его переместить, "+\
         "промасштабировать, повернуть."
-
-def init_input_window():
-    input_window = Tk()
-    input_window.geometry("200x200")
-    input_window.resizable(False, False)
-    x_label = Label(input_window, text="X:")
-    x_label.place(relx=0.1, rely=0.1, relwidth=0.2, relheight=0.2)
-    x_input = Entry(input_window)
-    x_input.focus()
-    x_input.place(relx=0.3, rely=0.1, relwidth=0.6, relheight=0.2)
-    y_label = Label(input_window, text="Y:")
-    y_label.place(relx=0.1, rely=0.4, relwidth=0.2, relheight=0.2)
-    y_input = Entry(input_window)
-    y_input.place(relx=0.3, rely=0.4, relwidth=0.6, relheight=0.2)
-    return input_window, x_input, y_input
 
 def scale(dots_list, k):
     global RESULT
@@ -69,32 +57,13 @@ def draw(dots_list, special_dot=None):
 
 
 def del_all_dots(dots_list):
-    global RESULT
-    if not RESULT:
-        if len(dots_list) != 0:
-            deleted_dots = []
-            for i in range(len(dots_list)):
-                deleted_dots.append(dots_list[i].copy())
-            dots_list.clear()
-            canvas.delete("all")
-            last_activity.append(("DEL_ALL", deleted_dots))
-
-def change_dot(listbox, dots_list):
-    global RESULT
-    if not RESULT:
-        try:
-            index = listbox.curselection()[0]
-        except:
-            messagebox.showerror("Ошибка", "Не выбрана точка для изменения")
-            return
-
-        dot_win, x, y = init_input_window()
-
-        change_but = Button(dot_win, text="Изменить",
-                            command=lambda: add_dot(listbox, dots_list, x.get(), y.get(), index))
-        change_but.place(relx=0.1, rely=0.7, relwidth=0.8, relheight=0.2)
-
-        dot_win.mainloop()
+    canvas.delete("all")
+    if len(dots_list) != 0:
+        deleted_dots = []
+        for i in range(len(dots_list)):
+            deleted_dots.append(dots_list[i].copy())
+        dots_list.clear()
+        last_activity.append(("DEL_ALL", deleted_dots))
 
 def previous_state_event(event, dots_list):
     global RESULT
@@ -146,26 +115,39 @@ def read_dots(name):
 
     return figure
 
-def del_and_draw_picture(old, new, dots):
-    del_all_dots(old)
-    draw_picture_by_dots(new, dots)
+def reset_picture():
+    global dots_list
+    del_all_dots(dots_list)
+    dots_list = read_dots(file_name)
+    draw_picture_by_dots(dots_list)
 
-def draw_picture_by_dots(figure, dots_list = -1):
+def draw_picture_by_dots(figure):
     for form in figure:
         for dot in form:
             canvas.create_polygon(form, fill="#148012", outline="#fff",\
                                   width=3)
-    if dots_list != -1:
-        for form in figure:
-            for dot in figure:
-                dots_list.extend(dot)
+
+def shift_picture(figure, dx, dy):
+    try:
+        dx = int(dx)
+        dy = -int(dy)
+    except:
+        dx = 0
+        dy = 0
+
+    #print(figure)
+    for form in figure:
+        for dot in form:
+            dot[0] += dx
+            dot[1] += dy
+    canvas.delete("all")
+    draw_picture_by_dots(figure)
 
 def main():
     global dots_list, dots_listbox, canvas
     dots_list = []
-    file_name = 'dots.txt'
 
-    figure_arr = read_dots(file_name)
+    dots_list = read_dots(file_name)
 
     #Окно
     root = Tk()
@@ -205,7 +187,9 @@ def main():
     y_shift.place(relx=0.18, rely=0.21, relwidth=0.04, relheight=0.06)
 
     shift_btn = Button(text="Переместить", width=9, height=2, bg='#6b7a0a',
-                    activebackground='#6b7a0a')
+                    activebackground='#6b7a0a',
+                    command=lambda:
+                    shift_picture(dots_list, x_shift.get(), y_shift.get()))
     shift_btn.place(relx=0, rely=0.28, relwidth=0.3, relheight=0.08)
 
     #Поворот
@@ -244,13 +228,13 @@ def main():
     #List_box
     dots_listbox = Listbox(font = ("Times", 14))
     dots_listbox.bind("<<ListboxSelect>>",
-            lambda e, a=dots_listbox, b=dots_list: listbox_select_event(e, a, b))
+          lambda e, a=dots_listbox, b=dots_list: listbox_select_event(e, a, b))
 
     #Сброс
     reset_btn = Button(text="Сбросить", width=9, height=2, bg='#6b7a0a',
-                    activebackground='#6b7a0a', command = lambda
-                    new=figure_arr, old=dots_list, dots=dots_list:
-                    del_and_draw_picture(old, new, dots))
+                    activebackground='#6b7a0a', command = lambda:
+                    reset_picture())
+
     reset_btn.place(relx=0, rely=0.91, relwidth=0.3, relheight=0.08)
 
     #Canvas
@@ -274,7 +258,13 @@ def main():
     root.bind("<Control-Up>", scale_up)
     root.bind("<Control-Down>", scale_down)
 
-    draw_picture_by_dots(figure_arr, dots_list)
+    draw_picture_by_dots(dots_list)
+
+    #Центр экрана
+    canvas.create_oval(CENTER[0] - RADIUS, CENTER[1] - RADIUS,\
+                       CENTER[0] + RADIUS, CENTER[1] + RADIUS,
+                       fill="red", outline="red", width=1)
+
     root.mainloop()
 
 if __name__ == "__main__":
