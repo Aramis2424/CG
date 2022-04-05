@@ -1,5 +1,6 @@
 import sys
 from math import sqrt, pi
+import copy
 from tkinter import Tk, Button, Label, Entry, END, Listbox, Canvas, messagebox, Menu
 
 WIDTH = 1000
@@ -57,44 +58,10 @@ def draw(dots_list, special_dot=None):
 
 
 def del_all_dots(dots_list):
+    global last_activity
+    last_activity = copy.deepcopy(dots_list)
     canvas.delete("all")
-    if len(dots_list) != 0:
-        deleted_dots = []
-        for i in range(len(dots_list)):
-            deleted_dots.append(dots_list[i].copy())
-        dots_list.clear()
-        last_activity.append(("DEL_ALL", deleted_dots))
-
-def previous_state_event(event, dots_list):
-    global RESULT
-    if not RESULT:
-        if len(last_activity) > 0:
-            act = last_activity.pop()
-
-            if act[0] == 'DEL':
-                add_dot(dots_listbox, dots_list, act[2][0], act[2][1], act[1], 1)
-                dot_str = "(%-3.1f, %-3.1f)" % (act[2][0], act[2][1])
-                if len(dots_list) == 0 or act[1] >= len(dots_list):
-                    dots_list.append(act[2])
-                    dots_listbox.insert(END, dot_str)
-                else:
-                    dots_list.insert(act[1], act[2])
-                    dots_listbox.insert(act[1], dot_str)
-            elif act[0] == 'DEL_ALL':
-                for i in range(len(act[1])):
-                    dots_list.append(act[1][i])
-                for i in range(len(dots_list)):
-                    dot_str = "(%-3.1f, %-3.1f)" % (dots_list[i][0], dots_list[i][1])
-                    dots_listbox.insert(END, dot_str)
-            elif act[0] == 'CHANGE':
-                dots_list.pop(act[1])
-                dots_listbox.delete(act[1])
-                dots_list.insert(act[1], act[2])
-                dot_str = "(%-3.1f, %-3.1f)" % (act[2][0], act[2][1])
-                dots_listbox.insert(act[1], dot_str)
-            else:
-                print("ERRORxx")
-            draw(dots_list, None)
+    dots_list.clear()
 
 def read_dots(name):
     form = []
@@ -117,6 +84,9 @@ def read_dots(name):
 
 def reset_picture():
     global dots_list
+    global last_activity
+    last_activity = copy.deepcopy(dots_list)
+
     del_all_dots(dots_list)
     dots_list = read_dots(file_name)
     draw_picture_by_dots(dots_list)
@@ -129,7 +99,7 @@ def draw_picture_by_dots(figure):
 
 def shift_picture(figure, dx, dy):
     global last_activity
-    last_activity = figure.copy()
+    last_activity = copy.deepcopy(figure)
     try:
         dx = int(dx)
         dy = -int(dy)
@@ -137,7 +107,6 @@ def shift_picture(figure, dx, dy):
         dx = 0
         dy = 0
 
-    #print(figure)
     for form in figure:
         for dot in form:
             dot[0] += dx
@@ -146,10 +115,17 @@ def shift_picture(figure, dx, dy):
     draw_picture_by_dots(figure)
 
 def last_event(event, last_arr):
-    global dots_list, last_activity
-    del_all_dots(dots_list)
-    dots_list = last_activity.copy()
-    draw_picture_by_dots(dots_list)
+    global dots_list, canvas
+    global last_activity
+    last_activity = copy.deepcopy(dots_list)
+    if last_arr:
+        canvas.delete("all")
+        dots_list.clear()
+        dots_list = copy.deepcopy(last_arr)
+        draw_picture_by_dots(dots_list)
+    else:
+        canvas.delete("all")
+        dots_list.clear()
 
 def main():
     global dots_list, dots_listbox, canvas
