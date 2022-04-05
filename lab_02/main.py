@@ -1,5 +1,5 @@
 import sys
-from math import sqrt, pi
+from math import sqrt, pi, cos, sin, radians
 import copy
 from tkinter import Tk, Button, Label, Entry, END, Listbox, Canvas, messagebox, Menu
 
@@ -101,8 +101,8 @@ def shift_picture(figure, dx, dy):
     global last_activity
     last_activity = copy.deepcopy(figure)
     try:
-        dx = int(dx)
-        dy = -int(dy)
+        dx = float(dx)
+        dy = -float(dy)
     except:
         dx = 0
         dy = 0
@@ -113,6 +113,67 @@ def shift_picture(figure, dx, dy):
             dot[1] += dy
     canvas.delete("all")
     draw_picture_by_dots(figure)
+
+
+def rotate_picture(figure, angle, xc, yc):
+    global CENTER
+    global last_activity
+    last_activity = copy.deepcopy(figure)
+    try:
+        xc = int(dx)
+        yc = int(dy)
+    except:
+        xc = CENTER[0]
+        yc = CENTER[1]
+
+    try:
+        angle = float(angle)
+    except:
+        angle = 0
+
+    for form in figure:
+        for dot in form:
+
+            x1 = float(xc + (dot[0] - xc) * cos(radians(angle)) +\
+                    (dot[1] - yc) * sin((radians(angle))))
+            y1 = float(yc - (dot[0] - xc) * sin(radians(angle)) +\
+                    (dot[1] - yc) * cos(radians(angle)))
+            dot[0] = x1
+            dot[1] = y1
+
+    canvas.delete("all")
+    draw_picture_by_dots(figure)
+
+
+def scale_picture(figure, kx, ky, xm, ym):
+    global CENTER
+    global last_activity
+    last_activity = copy.deepcopy(figure)
+    try:
+        xm = int(dx)
+        ym = int(dy)
+    except:
+        xm = CENTER[0]
+        ym = CENTER[1]
+
+    try:
+        kx = float(kx)
+        ky = float(ky)
+    except:
+        kx = 1
+        ky = 1
+
+    for form in figure:
+        for dot in form:
+
+            x1 = float(kx*dot[0] + (1 - kx) * xm)
+            y1 = float(ky*dot[1] + (1 - ky) * ym)
+            dot[0] = x1
+            dot[1] = y1
+
+    canvas.delete("all")
+    draw_picture_by_dots(figure)
+
 
 def last_event(event, last_arr):
     global dots_list, canvas
@@ -187,7 +248,9 @@ def main():
     angle_rotation.place(relx=0.16, rely=0.45, relwidth=0.04, relheight=0.06)
 
     rotation_btn = Button(text="Повернуть", width=9, height=2, bg='#6b7a0a',
-                    activebackground='#6b7a0a')
+                    activebackground='#6b7a0a', command=lambda:
+                    rotate_picture(dots_list, angle_rotation.get(),\
+                    x_zoom_center.get(), y_zoom_center.get()))
     rotation_btn.place(relx=0, rely=0.52, relwidth=0.3, relheight=0.08)
 
     #Масштабирование
@@ -206,7 +269,9 @@ def main():
     y_scale.place(relx=0.18, rely=0.7, relwidth=0.04, relheight=0.06)
 
     scale_btn = Button(text="Масштабировать", width=9, height=2, bg='#6b7a0a',
-                    activebackground='#6b7a0a')
+                    activebackground='#6b7a0a', command=lambda:
+                    scale_picture(dots_list, x_scale.get(), y_scale.get(),\
+                    x_zoom_center.get(), y_zoom_center.get()))
     scale_btn.place(relx=0, rely=0.77, relwidth=0.3, relheight=0.08)
 
     #List_box
