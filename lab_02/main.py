@@ -170,25 +170,22 @@ def draw_center(x, y):
                        fill="red", outline="red", width=1)
 
 
-def last_event(event, last_arr):
+def last_event(event, last_arr, last_center):
     global dots_list, canvas
     global last_activity, last_center_place, CENTER
     last_activity = copy.deepcopy(dots_list)
+    last_center_place = copy.deepcopy(CENTER)
+
     if last_arr:
         canvas.delete("all")
         dots_list.clear()
         dots_list = copy.deepcopy(last_arr)
-        if last_center_place:
-            CENTER = copy.deepcopy(last_center_place)
         draw_picture_by_dots(dots_list)
     else:
         canvas.delete("all")
         dots_list.clear()
-        if last_center_place:
-            CENTER = copy.deepcopy(last_center_place)
-            name_center = canvas.create_oval(CENTER[0] - RADIUS, CENTER[1] - RADIUS,\
-                       CENTER[0] + RADIUS, CENTER[1] + RADIUS,
-                       fill="red", outline="red", width=1)
+
+
 
 def main():
     global dots_list, dots_listbox, canvas
@@ -310,7 +307,8 @@ def main():
                         del_all_dots(dots_list))
 
     #Команды
-    root.bind("<Control-z>", lambda e: last_event(e, last_activity))
+    root.bind("<Control-z>", lambda e:\
+                last_event(e, last_activity, last_center_place))
 
     draw_picture_by_dots(dots_list)
 
