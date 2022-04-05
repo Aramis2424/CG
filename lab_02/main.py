@@ -5,7 +5,10 @@ from tkinter import Tk, Button, Label, Entry, END, Listbox, Canvas, messagebox, 
 
 WIDTH = 1000
 HEIGHT = 600
-CENTER = (350, 300)
+X_CENTER = 350
+Y_CENTER = 300
+CENTER = [350, 300]
+name_center = 0
 RADIUS = 3
 
 file_name = 'dots.txt'
@@ -15,47 +18,11 @@ EPS = 1e-8
 RESULT = False
 
 last_activity = []
+last_center_place = []
 
 
 TASK = "Нарисовать рисунок медведицы, затем его переместить, "+\
         "промасштабировать, повернуть."
-
-def scale(dots_list, k):
-    global RESULT
-    RESULT = False
-    for i in range(len(dots_list)):
-        dots_list[i][0] = k * dots_list[i][0]
-        dots_list[i][1] = k * dots_list[i][1]
-
-    draw(dots_list)
-
-def scale_up(event):
-    scale(dots_list, 1.2)
-
-def scale_down(event):
-    scale(dots_list, 0.9)
-
-def scale_com(event):
-    if event.delta == -120:
-        scale_down(event)
-    elif event.delta == 120:
-        scale_up(event)
-
-
-def draw(dots_list, special_dot=None):
-    canvas.delete("all")
-    for item in dots_list:
-        if item != special_dot:
-            canvas.create_oval(
-                item[0] - RADIUS, item[1] - RADIUS, item[0] + RADIUS, item[1] + RADIUS,
-                fill="#fff", outline="#fff", width=1
-            )
-        else:
-            canvas.create_oval(
-                item[0] - RADIUS, item[1] - RADIUS, item[0] + RADIUS, item[1] + RADIUS,
-                fill="red", outline="red", width=1
-            )
-
 
 def del_all_dots(dots_list):
     global last_activity
@@ -84,18 +51,26 @@ def read_dots(name):
 
 def reset_picture():
     global dots_list
-    global last_activity
+    global last_activity, CENTER, X_CENTER, Y_CENTER
     last_activity = copy.deepcopy(dots_list)
+
+    CENTER[0] = X_CENTER
+    CENTER[1] = Y_CENTER
 
     del_all_dots(dots_list)
     dots_list = read_dots(file_name)
     draw_picture_by_dots(dots_list)
 
 def draw_picture_by_dots(figure):
+    global CENTER, name_center
     for form in figure:
         for dot in form:
             canvas.create_polygon(form, fill="#148012", outline="#fff",\
                                   width=3)
+    #Центр экрана
+    name_center = canvas.create_oval(CENTER[0] - RADIUS, CENTER[1] - RADIUS,\
+                       CENTER[0] + RADIUS, CENTER[1] + RADIUS,
+                       fill="red", outline="red", width=1)
 
 def shift_picture(figure, dx, dy):
     global last_activity
@@ -120,8 +95,8 @@ def rotate_picture(figure, angle, xc, yc):
     global last_activity
     last_activity = copy.deepcopy(figure)
     try:
-        xc = int(dx)
-        yc = int(dy)
+        xc = float(dx)
+        yc = float(dy)
     except:
         xc = CENTER[0]
         yc = CENTER[1]
@@ -150,8 +125,8 @@ def scale_picture(figure, kx, ky, xm, ym):
     global last_activity
     last_activity = copy.deepcopy(figure)
     try:
-        xm = int(dx)
-        ym = int(dy)
+        xm = float(dx)
+        ym = float(dy)
     except:
         xm = CENTER[0]
         ym = CENTER[1]
@@ -175,18 +150,45 @@ def scale_picture(figure, kx, ky, xm, ym):
     draw_picture_by_dots(figure)
 
 
+def draw_center(x, y):
+    global CENTER, canvas, name_center, last_center_place
+    last_center_place = copy.deepcopy(CENTER)
+
+    canvas.delete(name_center)
+    try:
+        x = float(x)
+        y = float(y)
+    except:
+        x = CENTER[0]
+        y = CENTER[1]
+
+    CENTER[0] = x
+    CENTER[1] = y
+
+    name_center = canvas.create_oval(CENTER[0] - RADIUS, CENTER[1] - RADIUS,\
+                       CENTER[0] + RADIUS, CENTER[1] + RADIUS,
+                       fill="red", outline="red", width=1)
+
+
 def last_event(event, last_arr):
     global dots_list, canvas
-    global last_activity
+    global last_activity, last_center_place, CENTER
     last_activity = copy.deepcopy(dots_list)
     if last_arr:
         canvas.delete("all")
         dots_list.clear()
         dots_list = copy.deepcopy(last_arr)
+        if last_center_place:
+            CENTER = copy.deepcopy(last_center_place)
         draw_picture_by_dots(dots_list)
     else:
         canvas.delete("all")
         dots_list.clear()
+        if last_center_place:
+            CENTER = copy.deepcopy(last_center_place)
+            name_center = canvas.create_oval(CENTER[0] - RADIUS, CENTER[1] - RADIUS,\
+                       CENTER[0] + RADIUS, CENTER[1] + RADIUS,
+                       fill="red", outline="red", width=1)
 
 def main():
     global dots_list, dots_listbox, canvas
@@ -207,14 +209,20 @@ def main():
     label_zoom_center.place(relx=0, rely=0, relwidth=0.3, relheight=0.04)
 
     x_label_zoom_center = Label(root, text="X:", bg='#6b7a0a')
-    x_label_zoom_center.place(relx=0.05, rely=0.05, relwidth=0.02, relheight=0.06)
+    x_label_zoom_center.place(relx=0., rely=0.05, relwidth=0.02, relheight=0.06)
     x_zoom_center = Entry(root, bg='#6b7a0a')
-    x_zoom_center.place(relx=0.08, rely=0.05, relwidth=0.04, relheight=0.06)
+    x_zoom_center.place(relx=0.03, rely=0.05, relwidth=0.04, relheight=0.06)
 
     y_label_zoom_center = Label(root, text="Y:", bg='#6b7a0a')
-    y_label_zoom_center.place(relx=0.15, rely=0.05, relwidth=0.02, relheight=0.06)
+    y_label_zoom_center.place(relx=0.1, rely=0.05, relwidth=0.02, relheight=0.06)
     y_zoom_center = Entry(root, bg='#6b7a0a')
-    y_zoom_center.place(relx=0.18, rely=0.05, relwidth=0.04, relheight=0.06)
+    y_zoom_center.place(relx=0.13, rely=0.05, relwidth=0.04, relheight=0.06)
+
+    center_btn = Button(text="Поставить", width=9, height=2, bg='#6b7a0a',
+                    activebackground='#6b7a0a',
+                    command=lambda:
+                    draw_center(x_zoom_center.get(), y_zoom_center.get()))
+    center_btn.place(relx=0.18, rely=0.05, relwidth=0.1, relheight=0.06)
 
     #Перемещение
     label_shift = Label(root, text="Перемещение:",
@@ -303,16 +311,13 @@ def main():
 
     #Команды
     root.bind("<Control-z>", lambda e: last_event(e, last_activity))
-    root.bind("<Control-MouseWheel>", scale_com)
-    root.bind("<Control-Up>", scale_up)
-    root.bind("<Control-Down>", scale_down)
 
     draw_picture_by_dots(dots_list)
 
-    #Центр экрана
-    canvas.create_oval(CENTER[0] - RADIUS, CENTER[1] - RADIUS,\
-                       CENTER[0] + RADIUS, CENTER[1] + RADIUS,
-                       fill="red", outline="red", width=1)
+##    #Центр экрана
+##    canvas.create_oval(CENTER[0] - RADIUS, CENTER[1] - RADIUS,\
+##                       CENTER[0] + RADIUS, CENTER[1] + RADIUS,
+##                       fill="red", outline="red", width=1)
 
     root.mainloop()
 
