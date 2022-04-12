@@ -20,7 +20,7 @@ dots = []
 last_activity = []
 
 #c = Color(hex='#000000')
-#cb = Color(hex='#ffffff')
+cb = Color(hex='#6b3e07')
 
 TASK = '''Реализовать различные алгоритмы построения одиночных отрезков. \n
 Отрезок задается координатой начала, \nкоординатой конца и цветом.\n
@@ -229,62 +229,237 @@ def bresenham_float_method(start_point, end_point, color):
     return dd, steps
 
 
-##def bresenham_int_method(start_point, end_point, color):
-##    x1 = start_point[0]
-##    y1 = start_point[1]
-##    x2 = end_point[0]
-##    y2 = end_point[1]
-##
-##    if fabs(x2 - x1) < EPS and fabs(y2 - y1) < EPS:
-##        return [[[x1, y1, color.hex]]]
-##
-##    x = x1
-##    y = y1
-##    dx = abs(x2 - x1)
-##    dy = abs(y2 - y1)
-##    s1 = (x2 - x1) / fabs(x2 - x1) if fabs(x2 - x1) > EPS else 0
-##    s2 = (y2 - y1) / fabs(y2 - y1) if fabs(y2 - y1) > EPS else 0
-##
-##    if dy > dx:
-##        dx, dy = dy, dx
-##        swaped = 1
-##    else:
-##        swaped = 0
-##
-##    e = 2 * dy - dx
-##    i = 1
-##    dots = []
-##    steps = 0
-##
-##    while i < dx + 1:
-##        dot = [x, y, color.hex]
-##        dots.append(dot)
-##
-##        x_buf = x
-##        y_buf = y
-##
-##        if e >= 0:
-##            if swaped:
-##                x = x + s1
-##            else:
-##                y = y + s2
-##
-##            e = e - 2 * dx
-##
-##        if swaped:
-##            y = y + s2
-##        else:
-##            x = x + s1
-##
-##        e = e + 2 * dy
-##
-##        if (x_buf != x) and (y_buf != y):
-##            steps += 1
-##
-##        i += 1
-##
-##    return dots, steps
+def bresenham_int_method(start_point, end_point, color):
+    x1 = start_point[0]
+    y1 = start_point[1]
+    x2 = end_point[0]
+    y2 = end_point[1]
 
+    if fabs(x2 - x1) < EPS and fabs(y2 - y1) < EPS:
+        return [[[x1, y1, color.hex]]]
+
+    x = x1
+    y = y1
+    dx = abs(x2 - x1)
+    dy = abs(y2 - y1)
+    s1 = (x2 - x1) / fabs(x2 - x1) if fabs(x2 - x1) > EPS else 0
+    s2 = (y2 - y1) / fabs(y2 - y1) if fabs(y2 - y1) > EPS else 0
+
+    if dy > dx:
+        dx, dy = dy, dx
+        swaped = 1
+    else:
+        swaped = 0
+
+    e = 2 * dy - dx
+    i = 1
+    dots = []
+    steps = 0
+
+    while i < dx + 1:
+        dot = [x, y, color.hex]
+        dots.append(dot)
+
+        x_buf = x
+        y_buf = y
+
+        if e >= 0:
+            if swaped:
+                x = x + s1
+            else:
+                y = y + s2
+
+            e = e - 2 * dx
+
+        if swaped:
+            y = y + s2
+        else:
+            x = x + s1
+
+        e = e + 2 * dy
+
+        if (x_buf != x) and (y_buf != y):
+            steps += 1
+
+        i += 1
+
+    return dots, steps
+
+def color_koef(color, k):
+    global cb
+    cc = list(color.rgb)
+    ccb = list(cb.rgb)
+
+    kk = k / 255
+    kkk = 1 - kk
+
+    if cc[0] - ccb[0] < 0:
+        c1 = cc[0] + kk * fabs(cc[0] - ccb[0])
+    else:
+        c1 = ccb[0] + kkk * fabs(cc[0] - ccb[0])
+
+    if cc[1] - ccb[1] < 0:
+        c2 = cc[1] + kk * fabs(cc[1] - ccb[1])
+    else:
+        c2 = ccb[0] + kkk * fabs(cc[1] - ccb[1])
+
+    if cc[2] - ccb[2] < 0:
+        c3 = cc[2] + kk * fabs(cc[2] - ccb[2])
+    else:
+        c3 = ccb[2] + kkk * fabs(cc[2] - ccb[2])
+
+    kk = k / 255
+
+    cl = Color((int(c1), int(c2), int(c3)))
+    return cl
+def bresenham_smooth_method(start_point, end_point, color):
+    x1 = start_point[0]
+    y1 = start_point[1]
+    x2 = end_point[0]
+    y2 = end_point[1]
+
+    if fabs(x2 - x1) < EPS and fabs(y2 - y1) < EPS:
+        return [[[x1, y1, color.hex]]]
+
+
+    x = x1
+    y = y1
+    dx = abs(x2 - x1)
+    dy = abs(y2 - y1)
+    s1 = (x2 - x1) / fabs(x2 - x1) if fabs(x2 - x1) > EPS else 0
+    s2 = (y2 - y1) / fabs(y2 - y1) if fabs(y2 - y1) > EPS else 0
+
+    if dy > dx:
+        dx, dy = dy, dx
+        swaped = 1
+    else:
+        swaped = 0
+
+    k = 255
+    m = dy / dx * k
+    e = k / 2
+    w = k - m
+    dots = [[x, y, color_koef(color, round(e)).hex]]
+    i = 1
+    steps = 0
+
+    while i < dx + 1:
+        x_buf = x
+        y_buf = y
+
+        if e < w:
+            if swaped:
+                y += s2
+            else:
+                x += s1
+            e += m
+        else:
+            y += s2
+            x += s1
+            e -= w
+
+        dot = [x, y, color_koef(color, round(e)).hex]
+
+        dots.append(dot)
+
+        if not ((x_buf == x and y_buf != y) or
+                (x_buf != x and y_buf == y)):
+            steps += 1
+
+        i += 1
+
+    return dots, steps
+
+def color_koef_wu(color, k):
+    return color + (k, k, k)
+def wu_method(start_point, end_point, color):
+    x1 = start_point[0]
+    y1 = start_point[1]
+    x2 = end_point[0]
+    y2 = end_point[1]
+
+    if fabs(x2 - x1) < EPS and fabs(y2 - y1) < EPS:
+        return [[[x1, y1, color.hex]]]
+
+    if fabs(y2 - y1) > fabs(x2 - x1):
+        swaped = 1
+    else:
+        swaped = 0
+
+    if swaped == 1:
+        x1, y1 = y1, x1
+        x2, y2 = y2, x2
+
+    if x1 > x2:
+        x2, x1 = x1, x2
+        y2, y1 = y1, y2
+
+    dots = []
+    if swaped:
+        dots.append([y1, x1, color_koef_wu(color, 1).hex])
+    else:
+        dots.append([x1, y1, color_koef_wu(color, 1).hex])
+
+    steps = 0
+    dx = x2 - x1
+    dy = y2 - y1
+
+    m = 0
+    if fabs(dy) > EPS:
+        m = dy / dx
+
+    y = y1 + m
+    x = x1 + 1
+    while x <= x2:
+        k = y - int(y)
+        k *= 255
+        if swaped == 1:
+            dots.append([int(y), x, color_koef_wu(color, 255 - k).hex])
+            dots.append([int(y) + 1, x, color_koef_wu(color, k).hex])
+        else:
+            dots.append([x, int(y), color_koef_wu(color, 255 - k).hex])
+            dots.append([x, int(y) + 1, color_koef_wu(color, k).hex])
+
+        if int(y) != int(y + m):
+            steps += 1
+
+        y += m
+        x += 1
+
+    return dots, steps
+
+def drawSpectr(len_line, color, delta_angle, method):
+    try:
+        len_line = int(len_line)
+        delta_angle = float(delta_angle)
+        if len_line <= 0:
+            messagebox.showerror("Ошибка", "Длина линии должна быть выше нуля")
+            return
+
+        if delta_angle <= 0:
+            messagebox.showerror("Ошибка", "Угол должен быть больше нуля")
+            return
+
+        start = [main_canvas.winfo_width() // 2, main_canvas.winfo_height() // 2]
+        angle = 0
+        while angle < 2 * math.pi:
+            end = [start[0] + len_line * math.cos(angle), start[1] + len_line * math.sin(angle)]
+            if method == 0:
+                tmp = bresenham_int_method(start, end, color)[0]
+            if method == 1:
+                tmp = bresenham_float_method(start, end, color)[0]
+            if method == 2:
+                tmp = cda_method(start, end, color)[0]
+            if method == 3:
+                tmp = bresenham_smooth_method(start, end, color)[0]
+            if method == 4:
+                tmp = wu_method(start, end, color)[0]
+            dots.append(tmp)
+            # last_activity.append(copy.deepcopy(dots))
+            angle += delta_angle * math.pi / 180
+        draw(dots)
+    except:
+        messagebox.showerror("Ошибка", "Неверные данные")
 
 def draw(dots, k=1):
     canvas.delete("all")
@@ -294,16 +469,16 @@ def draw(dots, k=1):
 
 def drawLine(start, end, color, method):
     try:
-##        if color == 0:
-##            color = Color(hex='#000000')
-##        if color == 1:
-##            color = Color(hex='#ffffff')
-##        if color == 2:
-##            color = Color(hex='#ff0000')
-##        if color == 3:
-##            color = Color(hex='#0000ff')
-##        if color == 4:
-##            color = Color(hex='#148012')
+        if color == 0:
+            color = Color(hex='#000000')
+        if color == 1:
+            color = Color(hex='#ffffff')
+        if color == 2:
+            color = Color(hex='#ff0000')
+        if color == 3:
+            color = Color(hex='#0000ff')
+        if color == 4:
+            color = Color(hex='#148012')
         start[0] = float(start[0])
         end[0] = float(end[0])
         start[1] = float(start[1])
@@ -469,3 +644,101 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def wu(p1, p2, color, step_count = False):
+
+    x1 = p1[0]
+    y1 = p1[1]
+    x2 = p2[0]
+    y2 = p2[1]
+
+    if (x2 - x1 == 0) and (y2 - y1 == 0):
+        return [[x1, y1, color]]
+
+
+    dx = x2 - x1
+    dy = y2 - y1
+
+    m = 1
+    step = 1
+    intens = 255
+
+    dots = []
+
+    steps = 0
+
+    if (fabs(dy) > fabs(dx)):
+        if (dy != 0):
+            m = dx / dy
+        m1 = m
+
+        if (y1 > y2):
+            m1 *= -1
+            step *= -1
+
+        y_end = round(y2) - 1 if (dy < dx) else (round(y2) + 1)
+
+        for y_cur in range(round(y1), y_end, step):
+            d1 = x1 - floor(x1)
+            d2 = 1 - d1
+
+            dot1 = [int(x1) + 1, y_cur, choose_color(color, round(fabs(d2) * intens))]
+
+            dot2 = [int(x1), y_cur, choose_color(color, round(fabs(d1) * intens))]
+
+            if step_count and y_cur < y2:
+                if (int(x1) != int(x1 + m)):
+                    steps += 1
+
+            dots.append(dot1)
+            dots.append(dot2)
+
+            x1 += m1
+
+    else:
+        if (dx != 0):
+            m = dy / dx
+
+        m1 = m
+
+        if (x1 > x2):
+            step *= -1
+            m1 *= -1
+
+        x_end = round(x2) - 1 if (dy > dx) else (round(x2) + 1)
+
+        for x_cur in range(round(x1), x_end, step):
+            d1 = y1 - floor(y1)
+            d2 = 1 - d1
+
+            dot1 = [x_cur, int(y1) + 1, choose_color(color, round(fabs(d2) * intens))]
+
+            dot2 = [x_cur, int(y1), choose_color(color, round(fabs(d1) * intens))]
+
+            if step_count and x_cur < x2:
+                if (int(y1) != int(y1 + m)):
+                    steps += 1
+
+            dots.append(dot1)
+            dots.append(dot2)
+
+            y1 += m1
+
+    if step_count:
+        return steps
+    else:
+        return dots
