@@ -664,7 +664,7 @@ if __name__ == '__main__':
 
     main_menu.add_cascade(label="Инструменты", menu=filemenu)
 
-    main_menu.add_command(label="Выход", command=exit_prog)
+    main_menu.add_command(label="Выход", command=root.destroy)
 
     root.bind("<Key-a>", scale_up)
     root.bind("<Key-b>", scale_down)
