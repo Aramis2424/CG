@@ -229,61 +229,61 @@ def bresenham_float_method(start_point, end_point, color):
     return dd, steps
 
 
-def bresenham_int_method(start_point, end_point, color):
-    x1 = start_point[0]
-    y1 = start_point[1]
-    x2 = end_point[0]
-    y2 = end_point[1]
-
-    if fabs(x2 - x1) < EPS and fabs(y2 - y1) < EPS:
-        return [[[x1, y1, color.hex]]]
-
-    x = x1
-    y = y1
-    dx = abs(x2 - x1)
-    dy = abs(y2 - y1)
-    s1 = (x2 - x1) / fabs(x2 - x1) if fabs(x2 - x1) > EPS else 0
-    s2 = (y2 - y1) / fabs(y2 - y1) if fabs(y2 - y1) > EPS else 0
-
-    if dy > dx:
-        dx, dy = dy, dx
-        swaped = 1
-    else:
-        swaped = 0
-
-    e = 2 * dy - dx
-    i = 1
-    dots = []
-    steps = 0
-
-    while i < dx + 1:
-        dot = [x, y, color.hex]
-        dots.append(dot)
-
-        x_buf = x
-        y_buf = y
-
-        if e >= 0:
-            if swaped:
-                x = x + s1
-            else:
-                y = y + s2
-
-            e = e - 2 * dx
-
-        if swaped:
-            y = y + s2
-        else:
-            x = x + s1
-
-        e = e + 2 * dy
-
-        if (x_buf != x) and (y_buf != y):
-            steps += 1
-
-        i += 1
-
-    return dots, steps
+##def bresenham_int_method(start_point, end_point, color):
+##    x1 = start_point[0]
+##    y1 = start_point[1]
+##    x2 = end_point[0]
+##    y2 = end_point[1]
+##
+##    if fabs(x2 - x1) < EPS and fabs(y2 - y1) < EPS:
+##        return [[[x1, y1, color.hex]]]
+##
+##    x = x1
+##    y = y1
+##    dx = abs(x2 - x1)
+##    dy = abs(y2 - y1)
+##    s1 = (x2 - x1) / fabs(x2 - x1) if fabs(x2 - x1) > EPS else 0
+##    s2 = (y2 - y1) / fabs(y2 - y1) if fabs(y2 - y1) > EPS else 0
+##
+##    if dy > dx:
+##        dx, dy = dy, dx
+##        swaped = 1
+##    else:
+##        swaped = 0
+##
+##    e = 2 * dy - dx
+##    i = 1
+##    dots = []
+##    steps = 0
+##
+##    while i < dx + 1:
+##        dot = [x, y, color.hex]
+##        dots.append(dot)
+##
+##        x_buf = x
+##        y_buf = y
+##
+##        if e >= 0:
+##            if swaped:
+##                x = x + s1
+##            else:
+##                y = y + s2
+##
+##            e = e - 2 * dx
+##
+##        if swaped:
+##            y = y + s2
+##        else:
+##            x = x + s1
+##
+##        e = e + 2 * dy
+##
+##        if (x_buf != x) and (y_buf != y):
+##            steps += 1
+##
+##        i += 1
+##
+##    return dots, steps
 
 
 def draw(dots, k=1):
@@ -294,16 +294,16 @@ def draw(dots, k=1):
 
 def drawLine(start, end, color, method):
     try:
-        if color == 0:
-            color = Color(hex='#000000')
-        if color == 1:
-            color = Color(hex='#ffffff')
-        if color == 2:
-            color = Color(hex='#ff0000')
-        if color == 3:
-            color = Color(hex='#0000ff')
-        if color == 4:
-            color = Color(hex='#148012')
+##        if color == 0:
+##            color = Color(hex='#000000')
+##        if color == 1:
+##            color = Color(hex='#ffffff')
+##        if color == 2:
+##            color = Color(hex='#ff0000')
+##        if color == 3:
+##            color = Color(hex='#0000ff')
+##        if color == 4:
+##            color = Color(hex='#148012')
         start[0] = float(start[0])
         end[0] = float(end[0])
         start[1] = float(start[1])
