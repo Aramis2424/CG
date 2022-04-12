@@ -495,7 +495,9 @@ def measure_by_steps(len_line):
 
     plt.subplots(figsize=(60, 40))
 
-    plt.subplot(2, 3, 1)
+    ax = plt.subplot(2, 3, 1)
+    ax.set_xlabel('Угол')
+    ax.set_ylabel('Кол-во ступенек')
     plt.bar(angles, bresenham_int_steps)
     plt.title("Брезенхейм (целочисленный)")
 
@@ -514,6 +516,7 @@ def measure_by_steps(len_line):
     plt.subplot(2, 3, 5)
     plt.bar(angles, cda_steps)
     plt.title("ЦДА")
+
 
     plt.show()
 
