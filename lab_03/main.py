@@ -14,7 +14,8 @@ RADIUS = 3
 
 EPS = 1e-8
 
-RESULT = False
+IS_FIRST_DOT = True
+dots_for_line = []
 
 dots = []
 last_activity = []
@@ -43,6 +44,11 @@ TASK = '''Реализовать различные алгоритмы пост�
 
 def exit_prog():
     sys.exit()
+
+def del_all_dots():
+    dots.clear()
+    last_activity.append(copy.deepcopy(dots))
+    canvas.delete("all")
 
 def last_event(event, last_arr, last_center):
     global dots_list, canvas
@@ -430,6 +436,17 @@ def wu_method(start_point, end_point, color):
 
 def drawSpectr(len_line, color, delta_angle, method):
     try:
+        if color == 0:
+            color = Color(hex='#000000')
+        if color == 1:
+            color = Color(hex='#ffffff')
+        if color == 2:
+            color = Color(hex='#ff0000')
+        if color == 3:
+            color = Color(hex='#0000ff')
+        if color == 4:
+            color = Color(hex='#148012')
+
         len_line = int(len_line)
         delta_angle = float(delta_angle)
         if len_line <= 0:
@@ -438,9 +455,8 @@ def drawSpectr(len_line, color, delta_angle, method):
 
         if delta_angle <= 0:
             messagebox.showerror("Ошибка", "Угол должен быть больше нуля")
-            return
-
-        start = [main_canvas.winfo_width() // 2, main_canvas.winfo_height() // 2]
+            retu
+        start = [canvas.winfo_width() // 2, canvas.winfo_height() // 2]
         angle = 0
         while angle < 2 * math.pi:
             end = [start[0] + len_line * math.cos(angle), start[1] + len_line * math.sin(angle)]
@@ -457,6 +473,7 @@ def drawSpectr(len_line, color, delta_angle, method):
             dots.append(tmp)
             # last_activity.append(copy.deepcopy(dots))
             angle += delta_angle * math.pi / 180
+
         draw(dots)
     except:
         messagebox.showerror("Ошибка", "Неверные данные")
@@ -498,6 +515,17 @@ def drawLine(start, end, color, method):
         draw(dots)
     except:
         messagebox.showerror("Ошибка", "Неверные данные")
+
+def add_dot_event(event, color, method):
+    global IS_FIRST_DOT, dots_for_line
+    if IS_FIRST_DOT:
+        IS_FIRST_DOT = False
+        dots_for_line.append([event.x, event.y])
+    else:
+        IS_FIRST_DOT = True
+        dots_for_line.append([event.x, event.y])
+        drawLine(dots_for_line[0], dots_for_line[1], color, method)
+        dots_for_line.clear()
 
 def main():
     global canvas
@@ -606,9 +634,10 @@ def main():
 
     spectr_btn = Button(text="Построить спектр",
                       bg='#6b7a0a',
-                      activebackground='#6b7a0a',)#
-                      #command=lambda: drawSpectr(len_spectr.get(),
-                      #c, angle_spectr.get(), method_combo.current()))
+                      activebackground='#6b7a0a',
+                      command=lambda: drawSpectr(len_spectr.get(),
+                      color_combo.current(), angle_spectr.get(),
+                      method_combo.current()))
     spectr_btn.place(relx=0, rely=0.79, relwidth=0.3, relheight=0.08)
 
     #Диаграмма
@@ -623,6 +652,8 @@ def main():
     canvas = Canvas(root, bg="#148012",
                         highlightthickness=4, highlightbackground="#6b3e07")
     canvas.place(relx=0.3, rely=0, relwidth=0.7, relheight=1)
+    canvas.bind("<Button-1>", lambda e: add_dot_event(e, color_combo.current(),
+                method_combo.current()))
 
     #Меню
     menu = Menu(root)
@@ -632,8 +663,8 @@ def main():
     menu.add_command(label="Автор",command=lambda:\
                         messagebox.showinfo("Автор", "Симонович Р.Д. ИУ7-44Б"))
     menu.add_command(label="Очистить холст", command=lambda:\
-                        del_all_dots(dots_list))
-    menu.add_command(label="Построить с шагом")#, command=special_add)
+                        del_all_dots())
+    #menu.add_command(label="Построить с шагом")#, command=special_add)
     menu.add_command(label="Выход", command=root.destroy)
 
     #Команды
@@ -650,95 +681,3 @@ if __name__ == "__main__":
 
 
 
-
-
-
-
-
-
-
-
-
-def wu(p1, p2, color, step_count = False):
-
-    x1 = p1[0]
-    y1 = p1[1]
-    x2 = p2[0]
-    y2 = p2[1]
-
-    if (x2 - x1 == 0) and (y2 - y1 == 0):
-        return [[x1, y1, color]]
-
-
-    dx = x2 - x1
-    dy = y2 - y1
-
-    m = 1
-    step = 1
-    intens = 255
-
-    dots = []
-
-    steps = 0
-
-    if (fabs(dy) > fabs(dx)):
-        if (dy != 0):
-            m = dx / dy
-        m1 = m
-
-        if (y1 > y2):
-            m1 *= -1
-            step *= -1
-
-        y_end = round(y2) - 1 if (dy < dx) else (round(y2) + 1)
-
-        for y_cur in range(round(y1), y_end, step):
-            d1 = x1 - floor(x1)
-            d2 = 1 - d1
-
-            dot1 = [int(x1) + 1, y_cur, choose_color(color, round(fabs(d2) * intens))]
-
-            dot2 = [int(x1), y_cur, choose_color(color, round(fabs(d1) * intens))]
-
-            if step_count and y_cur < y2:
-                if (int(x1) != int(x1 + m)):
-                    steps += 1
-
-            dots.append(dot1)
-            dots.append(dot2)
-
-            x1 += m1
-
-    else:
-        if (dx != 0):
-            m = dy / dx
-
-        m1 = m
-
-        if (x1 > x2):
-            step *= -1
-            m1 *= -1
-
-        x_end = round(x2) - 1 if (dy > dx) else (round(x2) + 1)
-
-        for x_cur in range(round(x1), x_end, step):
-            d1 = y1 - floor(y1)
-            d2 = 1 - d1
-
-            dot1 = [x_cur, int(y1) + 1, choose_color(color, round(fabs(d2) * intens))]
-
-            dot2 = [x_cur, int(y1), choose_color(color, round(fabs(d1) * intens))]
-
-            if step_count and x_cur < x2:
-                if (int(y1) != int(y1 + m)):
-                    steps += 1
-
-            dots.append(dot1)
-            dots.append(dot2)
-
-            y1 += m1
-
-    if step_count:
-        return steps
-    else:
-        return dots
