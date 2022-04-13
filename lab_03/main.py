@@ -20,8 +20,7 @@ dots_for_line = []
 dots = []
 last_activity = []
 
-#c = Color(hex='#000000')
-cb = Color(hex='#6b3e07')
+cb = Color(hex='#ffffff')
 
 TASK = '''Реализовать различные алгоритмы построения одиночных отрезков. \n
 Отрезок задается координатой начала, \nкоординатой конца и цветом.\n
@@ -46,25 +45,18 @@ def exit_prog():
     sys.exit()
 
 def del_all_dots():
+    global last_activity, dots
     dots.clear()
     last_activity.append(copy.deepcopy(dots))
     canvas.delete("all")
 
-def last_event(event, last_arr, last_center):
-    global dots_list, canvas
-    global last_activity, last_center_place, CENTER
-    last_activity = copy.deepcopy(dots_list)
-    last_center_place = copy.deepcopy(CENTER)
+def last_event(event):
+    global dots, last_activity
+    dots.clear()
+    if len(last_activity) > 0:
+        dots = last_activity.pop()
 
-    if last_arr:
-        canvas.delete("all")
-        dots_list.clear()
-        dots_list = copy.deepcopy(last_arr)
-        draw_picture_by_dots(dots_list)
-    else:
-        canvas.delete("all")
-        dots_list.clear()
-
+    draw(dots)
 
 def step_diagram(len_line):
     try:
@@ -94,7 +86,7 @@ def step_diagram(len_line):
         end = [start[0] + len_line * math.cos(angle), start[1] + len_line * math.sin(angle)]
         bresenham_int_steps.append(bresenham_int_method(start, end, color)[1])
         bresenham_float_steps.append(bresenham_float_method(start, end, color)[1])
-        cda_steps.append(cda_method(start, end, color)[1])
+        cda_steps.append(cda(start, end, color)[1])
         bresenham_smooth_steps.append(bresenham_smooth_method(start, end, color)[1])
         wu_steps.append(wu_method(start, end, color)[1])
         angle += delta_angle * math.pi / 180
@@ -137,7 +129,7 @@ def step_diagram(len_line):
 
     plt.show()
 
-def cda_method(start_point, end_point, color):
+def cda(start_point, end_point, color):
     x1 = start_point[0]
     y1 = start_point[1]
     x2 = end_point[0]
@@ -208,30 +200,23 @@ def bresenham_float_method(start_point, end_point, color):
     while i < dx + 1:
         dot = [x, y, color.hex]
         dd.append(dot)
-
         x_buf = x
         y_buf = y
-
         if e >= 0:
             if swaped:
                 x = x + s1
             else:
                 y = y + s2
             e = e - 1
-
         if swaped:
             y = y + s2
         else:
             x = x + s1
-
         e = e + m
-
         if not ((x_buf == x and y_buf != y) or
                 (x_buf != x and y_buf == y)):
             steps += 1
-
         i += 1
-
     return dd, steps
 
 
@@ -265,28 +250,21 @@ def bresenham_int_method(start_point, end_point, color):
     while i < dx + 1:
         dot = [x, y, color.hex]
         dots.append(dot)
-
         x_buf = x
         y_buf = y
-
         if e >= 0:
             if swaped:
                 x = x + s1
             else:
                 y = y + s2
-
             e = e - 2 * dx
-
         if swaped:
             y = y + s2
         else:
             x = x + s1
-
         e = e + 2 * dy
-
         if (x_buf != x) and (y_buf != y):
             steps += 1
-
         i += 1
 
     return dots, steps
@@ -326,8 +304,6 @@ def bresenham_smooth_method(start_point, end_point, color):
 
     if fabs(x2 - x1) < EPS and fabs(y2 - y1) < EPS:
         return [[[x1, y1, color.hex]]]
-
-
     x = x1
     y = y1
     dx = abs(x2 - x1)
@@ -340,7 +316,6 @@ def bresenham_smooth_method(start_point, end_point, color):
         swaped = 1
     else:
         swaped = 0
-
     k = 255
     m = dy / dx * k
     e = k / 2
@@ -363,15 +338,11 @@ def bresenham_smooth_method(start_point, end_point, color):
             y += s2
             x += s1
             e -= w
-
         dot = [x, y, color_koef(color, round(e)).hex]
-
         dots.append(dot)
-
         if not ((x_buf == x and y_buf != y) or
                 (x_buf != x and y_buf == y)):
             steps += 1
-
         i += 1
 
     return dots, steps
@@ -435,6 +406,7 @@ def wu_method(start_point, end_point, color):
     return dots, steps
 
 def drawSpectr(len_line, color, delta_angle, method):
+    global last_activity
     try:
         if color == 0:
             color = Color(hex='#000000')
@@ -465,11 +437,12 @@ def drawSpectr(len_line, color, delta_angle, method):
             if method == 1:
                 tmp = bresenham_float_method(start, end, color)[0]
             if method == 2:
-                tmp = cda_method(start, end, color)[0]
+                tmp = cda(start, end, color)[0]
             if method == 3:
                 tmp = bresenham_smooth_method(start, end, color)[0]
             if method == 4:
                 tmp = wu_method(start, end, color)[0]
+            last_activity = copy.deepcopy(dots)
             dots.append(tmp)
             # last_activity.append(copy.deepcopy(dots))
             angle += delta_angle * math.pi / 180
@@ -479,6 +452,8 @@ def drawSpectr(len_line, color, delta_angle, method):
         messagebox.showerror("Ошибка", "Неверные данные")
 
 def draw(dots, k=1):
+    global last_activity
+    #last_activity = copy.deepcopy(dots)
     canvas.delete("all")
     for line in dots:
         for dot in line:
@@ -501,7 +476,7 @@ def drawLine(start, end, color, method):
         start[1] = float(start[1])
         end[1] = float(end[1])
         if method == 0:
-            tmp = copy.deepcopy(list(cda_method(start, end, color)[0]))
+            tmp = copy.deepcopy(list(cda(start, end, color)[0]))
         if method == 1:
             tmp = copy.deepcopy(list(bresenham_float_method(start, end, color)[0]))
         if method == 2:
@@ -510,8 +485,9 @@ def drawLine(start, end, color, method):
             tmp = copy.deepcopy(list(bresenham_smooth_method(start, end, color)[0]))
         if method == 4:
             tmp = copy.deepcopy(list(wu_method(start, end, color)[0]))
+        #last_activity = (copy.deepcopy(dots))
         dots.append(tmp)
-        #last_activity.append(copy.deepcopy(dots))
+        last_activity.append(copy.deepcopy(dots))
         draw(dots)
     except:
         messagebox.showerror("Ошибка", "Неверные данные")
@@ -521,6 +497,11 @@ def add_dot_event(event, color, method):
     if IS_FIRST_DOT:
         IS_FIRST_DOT = False
         dots_for_line.append([event.x, event.y])
+        canvas.create_oval(
+                event.x - RADIUS, event.y - RADIUS,
+                event.x + RADIUS, event.y + RADIUS,
+                fill="#001", outline="#001", width=1
+            )
     else:
         IS_FIRST_DOT = True
         dots_for_line.append([event.x, event.y])
@@ -649,7 +630,7 @@ def main():
 
 
     #Canvas
-    canvas = Canvas(root, bg="#148012",
+    canvas = Canvas(root, bg="#fff", #148012
                         highlightthickness=4, highlightbackground="#6b3e07")
     canvas.place(relx=0.3, rely=0, relwidth=0.7, relheight=1)
     canvas.bind("<Button-1>", lambda e: add_dot_event(e, color_combo.current(),
@@ -668,16 +649,9 @@ def main():
     menu.add_command(label="Выход", command=root.destroy)
 
     #Команды
-    root.bind("<Control-z>", lambda e:\
-                last_event(e, last_activity, last_center_place))
+    #root.bind("<Control-z>", lambda e: last_event(e))
 
     root.mainloop()
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
