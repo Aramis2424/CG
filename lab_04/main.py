@@ -1,12 +1,13 @@
 import copy
 import math
 import sys
-from math import fabs, floor
-from tkinter import Tk, Button, Label, Entry, Canvas, messagebox, Menu, Frame, SUNKEN, colorchooser
+import time
+from tkinter import Tk, Button, Label, Entry, Canvas,\
+    messagebox, Menu, Frame, SUNKEN, colorchooser
 from tkinter import ttk
 import matplotlib.pyplot as plt
-import numpy as np
 from colorutils import Color
+from math import sqrt, cos, sin, pi
 
 WIDTH = 1000
 HEIGHT = 600
@@ -31,6 +32,76 @@ TASK = '''Реализовать алгоритмы построения окр�
 
 def del_all_dots():
     canvas.delete("all")
+
+
+#Окружности
+def cir_canon_method(center, radius, color):
+    c_dots = []
+    x_c = center[0]
+    y_c = center[1]
+    color = color.hex
+
+    end = round(radius / sqrt(2))
+
+    r2 = radius ** 2
+    x = 0
+    while x <= end:
+        y = round(sqrt(r2 - x ** 2))
+
+        c_dots.append([x_c + x, y_c + y, color])
+        c_dots.append([x_c - x, y_c + y, color])
+        c_dots.append([x_c + x, y_c - y, color])
+        c_dots.append([x_c - x, y_c - y, color])
+
+        c_dots.append([x_c + y, y_c + x, color])
+        c_dots.append([x_c - y, y_c + x, color])
+        c_dots.append([x_c + y, y_c - x, color])
+        c_dots.append([x_c - y, y_c - x, color])
+
+        x += 1
+    return c_dots, 0
+
+
+#Эллипсы
+
+
+def draw_cir(center, radius, color, method):
+    global last_activity, dots
+    if color == 0:
+        color = Color(hex='#000000')
+    if color == 1:
+        color = Color(hex='#ffffff')
+    if color == 2:
+        color = Color(hex='#ff0000')
+    if color == 3:
+        color = Color(hex='#0000ff')
+    if color == 4:
+        color = Color(hex='#148012')
+    try:
+        t1 = float(center[0])
+        t2 = float(center[1])
+        t3 = float(radius)
+        if method == 0:
+            tmp = copy.deepcopy(list(cir_canon_method([t1, t2], t3, color)[0]))
+        if method == 1:
+            tmp = copy.deepcopy(list(param_method_cir([t1, t2], t3, color)[0]))
+        if method == 2:
+            tmp = copy.deepcopy(list(bresenham_method_cir([t1, t2], t3, color)[0]))
+        if method == 3:
+            tmp = copy.deepcopy(list(mid_dot_method_cir([t1, t2], t3, color)[0]))
+        dots.append(tmp)
+        last_activity.append(copy.deepcopy(dots))
+        draw()
+    except:
+        messagebox.showerror("Ошибка", "Неверные данные")
+
+def draw():
+    global last_activity, dots
+    canvas.delete("all")
+    for line in dots:
+        for dot in line:
+            canvas.create_line(dot[0], dot[1],
+                    dot[0] + 1, dot[1], fill=dot[2])
 
 
 def main():
@@ -109,10 +180,13 @@ def main():
 
     cir_btn = Button(text="Построить окружность",
                   bg='#6b7a0a',
-                  activebackground='#6b7a0a')#,
-                  #command=lambda: drawLine([line_x1.get(), line_y1.get()],
-                  #[line_x2.get(), line_y2.get()], color_combo.current(),
-                  #method_combo.current()))
+                  activebackground='#6b7a0a',
+                  command=lambda: draw_cir([line_x1.get(),\
+                                            line_y1.get()],\
+                                            line_rc.get(),\
+                                            color_combo.current(),\
+                                            method_combo.current())
+                   )
     cir_btn.place(relx=0, rely=0.36, relwidth=0.3, relheight=0.05)
 
     #Задание эллипса
@@ -194,37 +268,37 @@ def main():
                               bg='#6b7a0a')
     label_shift.place(relx=0, rely=0.835, relwidth=0.4, relheight=0.04)
     #Данные спектра
-    label_xspec_c = Label(root, text="Шаг:", anchor='c',
+    label_xspec_e = Label(root, text="Шаг:", anchor='c',
                               bg='#6b7a0a')
-    label_xspec_c.place(relx=0, rely=0.88, relwidth=0.03, relheight=0.06)
-    line_xspec_c = Entry(root, bg='#6b7a0a')
-    line_xspec_c.place(relx=0.033, rely=0.88, relwidth=0.03, relheight=0.06)
+    label_xspec_e.place(relx=0, rely=0.88, relwidth=0.03, relheight=0.06)
+    line_xspec_e = Entry(root, bg='#6b7a0a')
+    line_xspec_e.place(relx=0.033, rely=0.88, relwidth=0.03, relheight=0.06)
 
-    label_yspec_c = Label(root, text="N:", anchor='c',
+    label_yspec_e = Label(root, text="N:", anchor='c',
                               bg='#6b7a0a')
-    label_yspec_c.place(relx=0.075, rely=0.88, relwidth=0.03, relheight=0.06)
-    line_yspec_c = Entry(root, bg='#6b7a0a')
-    line_yspec_c.place(relx=0.108, rely=0.88, relwidth=0.03, relheight=0.06)
+    label_yspec_e.place(relx=0.075, rely=0.88, relwidth=0.03, relheight=0.06)
+    line_yspec_e = Entry(root, bg='#6b7a0a')
+    line_yspec_e.place(relx=0.108, rely=0.88, relwidth=0.03, relheight=0.06)
 
-    label_rspec_c = Label(root, text="Нач:", anchor='c',
+    label_rspec_eb = Label(root, text="A_н:", anchor='c',
                               bg='#6b7a0a')
-    label_rspec_cb.place(relx=0.155, rely=0.88, relwidth=0.03, relheight=0.06)
-    line_rspec_cb = Entry(root, bg='#6b7a0a')
-    line_rspec_cb.place(relx=0.188, rely=0.88, relwidth=0.03, relheight=0.06)
+    label_rspec_eb.place(relx=0.155, rely=0.88, relwidth=0.03, relheight=0.06)
+    line_rspec_eb = Entry(root, bg='#6b7a0a')
+    line_rspec_eb.place(relx=0.188, rely=0.88, relwidth=0.03, relheight=0.06)
 
-    label_rspec_cf = Label(root, text="Кон:", anchor='c',
+    label_rspec_ef = Label(root, text="B_н:", anchor='c',
                               bg='#6b7a0a')
-    label_rspec_cf.place(relx=0.231, rely=0.88, relwidth=0.03, relheight=0.06)
-    line_rspec_cf = Entry(root, bg='#6b7a0a')
-    line_rspec_cf.place(relx=0.264, rely=0.88, relwidth=0.03, relheight=0.06)
+    label_rspec_ef.place(relx=0.231, rely=0.88, relwidth=0.03, relheight=0.06)
+    line_rspec_ef = Entry(root, bg='#6b7a0a')
+    line_rspec_ef.place(relx=0.264, rely=0.88, relwidth=0.03, relheight=0.06)
 
-    spec_c_btn = Button(text="Построить спектр эллипса",
+    spec_e_btn = Button(text="Построить спектр эллипса",
                   bg='#6b7a0a',
                   activebackground='#6b7a0a')#,
                   #command=lambda: drawLine([line_x1.get(), line_y1.get()],
                   #[line_x2.get(), line_y2.get()], color_combo.current(),
                   #method_combo.current()))
-    spec_c_btn.place(relx=0, rely=0.945, relwidth=0.3, relheight=0.05)
+    spec_e_btn.place(relx=0, rely=0.945, relwidth=0.3, relheight=0.05)
 
     #Canvas
     canvas = Canvas(root, bg="#148012", #148012
