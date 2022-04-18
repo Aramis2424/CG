@@ -344,7 +344,6 @@ def bresenham_smooth_method(start_point, end_point, color):
                 (x_buf != x and y_buf == y)):
             steps += 1
         i += 1
-
     return dots, steps
 
 def color_koef_wu(color, k):
@@ -402,7 +401,6 @@ def wu_method(start_point, end_point, color):
 
         y += m
         x += 1
-
     return dots, steps
 
 def drawSpectr(len_line, color, delta_angle, method):
