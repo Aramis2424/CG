@@ -33,7 +33,23 @@ TASK = '''Реализовать алгоритмы построения окр�
 def del_all_dots():
     canvas.delete("all")
 
-
+##import tkinter as tk
+##from math import cos, sin, radians
+##
+##root = tk.Tk()
+##canvas = tk.Canvas(root, width=400, height=400)
+##
+##x_offset = 200
+##y_offset = 200
+##radius = 100
+##
+##coords = [ (radius * cos(radians(angle)), radius * sin(radians(angle))) for angle in range(360)]
+##
+### Замыкаем круг путём добавления первой координаты в конец списка.
+### Иначе будет разрыв между последней и первой точкой.
+##coords.append(coords[0])
+##for (x1, y1), (x2, y2) in zip(coords, coords[1:]):
+##    canvas.create_line(x_offset + x1, y_offset + y1, x_offset + x2, y_offset + y2, width=3)
 #Окружности
 def cir_lib_method(center, radius, color):
     x_c = center[0]
@@ -101,6 +117,83 @@ def cir_param_method(dot_center, radius, color):
     return c_dots, 0
 
 
+def cir_bresenham_method(dot_center, radius, color):
+    x_c = round(dot_center[0])
+    y_c = round(dot_center[1])
+    c_dots = []
+    color = color.hex
+    x = 0
+    y = radius
+    tmp_pxl = 1
+    delta_i = 2 * (1 - radius)
+
+    err = 0
+
+    while x <= y:
+        c_dots.append([x_c + x, y_c + y, color])
+        c_dots.append([x_c - x, y_c + y, color])
+        c_dots.append([x_c + x, y_c - y, color])
+        c_dots.append([x_c - x, y_c - y, color])
+
+        c_dots.append([x_c + y, y_c + x, color])
+        c_dots.append([x_c - y, y_c + x, color])
+        c_dots.append([x_c + y, y_c - x, color])
+        c_dots.append([x_c - y, y_c - x, color])
+
+        if delta_i <= 0:
+            err = 2 * delta_i + 2 * y - 1
+
+            if err < 0:
+                x = x + 1
+                delta_i = delta_i + 2 * x + 3
+            else:
+                x = x + 1
+                y = y - 1
+                delta_i = delta_i + 2 * x - 2 * y + 6
+        elif delta_i > 0:
+            err = 2 * delta_i - 2 * x - 1
+
+            if err < 0:
+                x = x + 1
+                y = y - 1
+                delta_i = delta_i + 2 * x - 2 * y + 6
+            else:
+                y = y - 1
+                delta_i = delta_i - 2 * y + 1
+    return c_dots, 0
+
+
+def cir_mid_dot_method(dot_center, radius, color):
+    x_c = dot_center[0]
+    y_c = dot_center[1]
+    c_dots = []
+    color = color.hex
+    x = 0
+    y = radius
+
+    delta = 1 - radius
+
+    while x <= y:
+        c_dots.append([x_c + x, y_c + y, color])
+        c_dots.append([x_c - x, y_c + y, color])
+        c_dots.append([x_c + x, y_c - y, color])
+        c_dots.append([x_c - x, y_c - y, color])
+
+        c_dots.append([x_c + y, y_c + x, color])
+        c_dots.append([x_c - y, y_c + x, color])
+        c_dots.append([x_c + y, y_c - x, color])
+        c_dots.append([x_c - y, y_c - x, color])
+
+        x += 1
+
+        if delta < 0:
+            delta = delta + 2 * x + 1
+        else:
+            y -= 1
+            delta = delta + 2 * (x - y) + 1
+    return c_dots, 0
+
+
 #Эллипсы
 
 
@@ -125,9 +218,9 @@ def draw_cir(center, radius, color, method):
         if method == 1:
             tmp = copy.deepcopy(list(cir_param_method([t1, t2], t3, color)[0]))
         if method == 2:
-            tmp = copy.deepcopy(list(bresenham_method_cir([t1, t2], t3, color)[0]))
+            tmp = copy.deepcopy(list(cir_bresenham_method([t1, t2], t3, color)[0]))
         if method == 3:
-            tmp = copy.deepcopy(list(mid_dot_method_cir([t1, t2], t3, color)[0]))
+            tmp = copy.deepcopy(list(cir_mid_dot_method([t1, t2], t3, color)[0]))
         if method == 4:
             cir_lib_method([t1, t2], t3, color)
             return
