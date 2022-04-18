@@ -35,6 +35,18 @@ def del_all_dots():
 
 
 #Окружности
+def cir_lib_method(center, radius, color):
+    x_c = center[0]
+    y_c = center[1]
+    color = color.hex
+
+    canvas.create_oval(
+                    x_c - radius, y_c - radius,
+                    x_c + radius, y_c + radius,
+                    fill="#148012", outline=color, width=1
+                    )
+
+
 def cir_canon_method(center, radius, color):
     c_dots = []
     x_c = center[0]
@@ -62,6 +74,33 @@ def cir_canon_method(center, radius, color):
     return c_dots, 0
 
 
+def cir_param_method(dot_center, radius, color):
+    x_c = dot_center[0]
+    y_c = dot_center[1]
+    c_dots = []
+    color = color.hex
+    step = 1 / radius
+
+    alpha = 0
+
+    while alpha < pi / 4 + step:
+        x = round(radius * cos(alpha))
+        y = round(radius * sin(alpha))
+
+        c_dots.append([x_c + x, y_c + y, color])
+        c_dots.append([x_c - x, y_c + y, color])
+        c_dots.append([x_c + x, y_c - y, color])
+        c_dots.append([x_c - x, y_c - y, color])
+
+        c_dots.append([x_c + y, y_c + x, color])
+        c_dots.append([x_c - y, y_c + x, color])
+        c_dots.append([x_c + y, y_c - x, color])
+        c_dots.append([x_c - y, y_c - x, color])
+
+        alpha += step
+    return c_dots, 0
+
+
 #Эллипсы
 
 
@@ -84,11 +123,14 @@ def draw_cir(center, radius, color, method):
         if method == 0:
             tmp = copy.deepcopy(list(cir_canon_method([t1, t2], t3, color)[0]))
         if method == 1:
-            tmp = copy.deepcopy(list(param_method_cir([t1, t2], t3, color)[0]))
+            tmp = copy.deepcopy(list(cir_param_method([t1, t2], t3, color)[0]))
         if method == 2:
             tmp = copy.deepcopy(list(bresenham_method_cir([t1, t2], t3, color)[0]))
         if method == 3:
             tmp = copy.deepcopy(list(mid_dot_method_cir([t1, t2], t3, color)[0]))
+        if method == 4:
+            cir_lib_method([t1, t2], t3, color)
+            return
         dots.append(tmp)
         last_activity.append(copy.deepcopy(dots))
         draw()
