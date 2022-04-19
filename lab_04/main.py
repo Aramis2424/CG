@@ -184,13 +184,13 @@ def draw_cir(center, radius, color, method):
     global last_activity, dots
     if color == 0:
         color = Color(hex='#000000')
-    if color == 1:
+    elif color == 1:
         color = Color(hex='#ffffff')
-    if color == 2:
+    elif color == 2:
         color = Color(hex='#ff0000')
-    if color == 3:
+    elif color == 3:
         color = Color(hex='#0000ff')
-    if color == 4:
+    elif color == 4:
         color = Color(hex='#148012')
     try:
         t1 = float(center[0])
@@ -198,13 +198,13 @@ def draw_cir(center, radius, color, method):
         t3 = float(radius)
         if method == 0:
             tmp = copy.deepcopy(list(cir_canon_method([t1, t2], t3, color)[0]))
-        if method == 1:
+        elif method == 1:
             tmp = copy.deepcopy(list(cir_param_method([t1, t2], t3, color)[0]))
-        if method == 2:
+        elif method == 2:
             tmp = copy.deepcopy(list(cir_bresenham_method([t1, t2], t3, color)[0]))
-        if method == 3:
+        elif method == 3:
             tmp = copy.deepcopy(list(cir_mid_dot_method([t1, t2], t3, color)[0]))
-        if method == 4:
+        elif method == 4:
             cir_lib_method([t1, t2], t3, color)
             return
         dots.append(tmp)
@@ -441,8 +441,20 @@ def draw_manual(event, color, method):
         draw_cir(dots_for_cir[0], radius, color, method)
         dots_for_cir.clear()
 
+
 def spec_cir(step, count, start, end, color, method):
     global canvas
+    if color == 0:
+        color = Color(hex='#000000')
+    if color == 1:
+        color = Color(hex='#ffffff')
+    if color == 2:
+        color = Color(hex='#ff0000')
+    if color == 3:
+        color = Color(hex='#0000ff')
+    if color == 4:
+        color = Color(hex='#148012')
+
     cc = 0 # Проверка данных, три из следующих четырех параметров
     flag = 0
     try:
@@ -487,7 +499,16 @@ def spec_cir(step, count, start, end, color, method):
     index = 0
 
     while index < count:
-        draw_cir(dot_center, radius, color, method)
+        #draw_cir(dot_center, radius, color, method)
+        if method == 0:
+            tmp = copy.deepcopy(list(cir_canon_method(dot_center, radius, color)[0]))
+        if method == 1:
+            tmp = copy.deepcopy(list(cir_param_method(dot_center, radius, color)[0]))
+        if method == 2:
+            tmp = copy.deepcopy(list(cir_bresenham_method(dot_center, radius, color)[0]))
+        if method == 3:
+            tmp = copy.deepcopy(list(cir_mid_dot_method(dot_center, radius, color)[0]))
+        dots.append(tmp)
         radius += step
         index += 1
     last_activity.append(copy.deepcopy(dots))
@@ -525,6 +546,91 @@ def spec_ell(step, count, a, b, color, method):
 
     last_activity.append(copy.deepcopy(dots))
     draw()
+
+def time_diagram():
+    dot_center = [canvas.winfo_width() // 2, canvas.winfo_height() // 2]
+    color = Color(hex="#fff")
+
+    ddt = 100
+    var = 10
+    res_time = [0] * 8
+    for i in range(8):
+        res_time[i] = [0] * 10
+    count_ = 0
+    for i in range(10, 20):
+        t1 = time.time()
+        for k in range(var):
+            cir_canon_method(dot_center, ddt * i, color)
+        t2 = time.time()
+        res_time[0][count_] = ((t2 - t1) / var)
+
+        t1 = time.time()
+        for k in range(var):
+            cir_param_method(dot_center, ddt * i, color)
+        t2 = time.time()
+        res_time[1][count_] = ((t2 - t1) / var)
+
+        t1 = time.time()
+        for k in range(var):
+            cir_bresenham_method(dot_center, ddt * i, color)
+        t2 = time.time()
+        res_time[2][count_] = ((t2 - t1) / var)
+
+        t1 = time.time()
+        for k in range(var):
+            cir_mid_dot_method(dot_center, ddt * i, color)
+        t2 = time.time()
+        res_time[3][count_] = ((t2 - t1) / var)
+
+        ###############
+
+        t1 = time.time()
+        for k in range(var):
+            ell_canon_method(dot_center, ddt * i, ddt * 2 * i, color)
+        t2 = time.time()
+        res_time[4][count_] = ((t2 - t1) / var)
+
+        t1 = time.time()
+        for k in range(var):
+            ell_param_method(dot_center, ddt * i, ddt * 2 * i, color)
+        t2 = time.time()
+        res_time[5][count_] = ((t2 - t1) / var)
+
+        t1 = time.time()
+        for k in range(var):
+            ell_bresenham_method(dot_center, ddt * i, ddt * 2 * i, color)
+        t2 = time.time()
+        res_time[6][count_] = ((t2 - t1) / var)
+
+        t1 = time.time()
+        for k in range(var):
+            ell_mid_dot_method(dot_center, ddt * i, ddt * 2 * i, color)
+        t2 = time.time()
+        res_time[7][count_] = ((t2 - t1) / var)
+
+        count_ += 1
+
+    rad_arr = list(i * ddt for i in range(10, 20))
+    plt.subplot(1, 2, 1)
+    plt.title("Эффективность алгоритмов (окружность)")
+    plt.plot(rad_arr, res_time[0], label="Каноническое\nуравнеие")
+    plt.plot(rad_arr, res_time[1], label="Параметрическое\nуравнение")
+    plt.plot(rad_arr, res_time[2], label="Брезенхем")
+    plt.plot(rad_arr, res_time[3], label="Алгоритм\nсредней точки")
+    plt.xticks(list(i * ddt for i in range(10, 20)))
+    plt.ylabel("Время")
+    plt.xlabel("Радиус")
+    plt.legend()
+
+    plt.subplot(1, 2, 2)
+    plt.title("Эффективность алгоритмов (эллипс)")
+    plt.plot(rad_arr, res_time[4], label="Каноническое\nуравнеие\n(Эллипс)")
+    plt.plot(rad_arr, res_time[5], label="Параметрическое\nуравнение\n(Эллипс)")
+    plt.plot(rad_arr, res_time[6], label="Брезенхем\n(Эллипс)")
+    plt.plot(rad_arr, res_time[7], label="Алгоритм\nсредней точки\n(Эллипс)")
+
+
+    plt.show()
 
 
 def main():
@@ -747,7 +853,7 @@ def main():
                         del_all_dots())
     #Диаграмма
     menu.add_command(label="Диаграмма", command=lambda:\
-                        time_diagram(len_spectr.get()))
+                        time_diagram())
     menu.add_command(label="Выход", command=root.destroy)
 
     #Команды
