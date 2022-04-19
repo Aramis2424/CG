@@ -50,6 +50,8 @@ def del_all_dots():
 ##coords.append(coords[0])
 ##for (x1, y1), (x2, y2) in zip(coords, coords[1:]):
 ##    canvas.create_line(x_offset + x1, y_offset + y1, x_offset + x2, y_offset + y2, width=3)
+
+
 #Окружности
 def cir_lib_method(center, radius, color):
     x_c = center[0]
@@ -194,9 +196,6 @@ def cir_mid_dot_method(dot_center, radius, color):
     return c_dots, 0
 
 
-#Эллипсы
-
-
 def draw_cir(center, radius, color, method):
     global last_activity, dots
     if color == 0:
@@ -229,6 +228,55 @@ def draw_cir(center, radius, color, method):
         draw()
     except:
         messagebox.showerror("Ошибка", "Неверные данные")
+
+
+#Эллипсы
+def ell_lib_method(center, a, b, color):
+    x_c = center[0]
+    y_c = center[1]
+    color = color.hex
+
+    canvas.create_oval(
+                    x_c - b, y_c - a,
+                    x_c + b, y_c + a,
+                    fill="", outline=color, width=1
+                    )
+
+
+def draw_ell(dot_center, a, b, color, method):
+    global last_activity, dots
+    if color == 0:
+        color = Color(hex='#000000')
+    if color == 1:
+        color = Color(hex='#ffffff')
+    if color == 2:
+        color = Color(hex='#ff0000')
+    if color == 3:
+        color = Color(hex='#0000ff')
+    if color == 4:
+        color = Color(hex='#148012')
+    try:
+        t1 = float(dot_center[0])
+        t2 = float(dot_center[1])
+        t3 = float(a)
+        t4 = float(b)
+        if method == 0:
+            tmp = copy.deepcopy(list(canon_method_ell([t1, t2], t3, t4, color)[0]))
+        if method == 1:
+            tmp = copy.deepcopy(list(param_method_ell([t1, t2], t3, t4, color)[0]))
+        if method == 2:
+            tmp = copy.deepcopy(list(bresenham_method_ell([t1, t2], t3, t4, color)[0]))
+        if method == 3:
+            tmp = copy.deepcopy(list(mid_dot_method_ell([t1, t2], t3, t4, color)[0]))
+        if method == 4:
+            ell_lib_method([t1, t2], t3, t4, color)
+            return
+        dots.append(tmp)
+        last_activity.append(copy.deepcopy(dots))
+        draw()
+    except:
+        messagebox.showerror("Ошибка", "Неверные данные")
+
 
 def draw():
     global last_activity, dots
@@ -355,10 +403,11 @@ def main():
 
     ell_btn = Button(text="Построить эллипс",
                   bg='#6b7a0a',
-                  activebackground='#6b7a0a')#,
-                  #command=lambda: drawLine([line_x1.get(), line_y1.get()],
-                  #[line_x2.get(), line_y2.get()], color_combo.current(),
-                  #method_combo.current()))
+                  activebackground='#6b7a0a',
+                  command=lambda: draw_ell([line_x2.get(), line_y2.get()],
+                                  line_ra.get(), line_rb.get(),
+                                  color_combo.current(),
+                                  method_combo.current()))
     ell_btn.place(relx=0, rely=0.555, relwidth=0.3, relheight=0.05)
 
     #Спектр окружности
