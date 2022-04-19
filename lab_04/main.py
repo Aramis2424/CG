@@ -31,6 +31,8 @@ TASK = '''Реализовать алгоритмы построения окр�
 
 
 def del_all_dots():
+    global dots
+    dots.clear()
     canvas.delete("all")
 
 
@@ -213,7 +215,7 @@ def draw_cir(center, radius, color, method):
 
 
 #Эллипсы
-def ell_lib_method(center, a, b, color):
+def ell_lib_method(center, b, a, color):
     x_c = center[0]
     y_c = center[1]
     color = color.hex
@@ -225,7 +227,7 @@ def ell_lib_method(center, a, b, color):
                     )
 
 
-def canon_method_ell(dot_center, a, b, color):
+def ell_canon_method(dot_center, a, b, color):
     x_c = dot_center[0]
     y_c = dot_center[1]
     c_dots = []
@@ -331,6 +333,48 @@ def ell_bresenham_method(dot_center, a, b, color):
     return c_dots, 0
 
 
+def ell_mid_dot_method(dot_center, a, b, color):
+    x_c = dot_center[0]
+    y_c = dot_center[1]
+    c_dots = []
+    color = color.hex
+    x = 0
+    y = b
+    a2 = a ** 2
+    b2 = b ** 2
+    end = round(a / sqrt(1 + b2 / a2))
+    delta = b2 - round(a2 * (b - 1 / 2))
+    while x <= end:
+        c_dots.append([x_c + x, y_c + y, color])
+        c_dots.append([x_c - x, y_c + y, color])
+        c_dots.append([x_c + x, y_c - y, color])
+        c_dots.append([x_c - x, y_c - y, color])
+        if delta > 0:
+            y -= 1
+            delta = delta - a2 * y * 2
+        x += 1
+        delta = delta + b2 * (2 * x + 1)
+
+    x = a
+    y = 0
+    end = round(b / sqrt(1 + a2 / b2))
+    delta = a2 - round(b2 * (x - 1 / 2))
+    while y <= end:
+        c_dots.append([x_c + x, y_c + y, color])
+        c_dots.append([x_c - x, y_c + y, color])
+        c_dots.append([x_c + x, y_c - y, color])
+        c_dots.append([x_c - x, y_c - y, color])
+
+        if delta > 0:
+            x -= 1
+            delta = delta - b2 * x * 2
+
+        y += 1
+
+        delta = delta + a2 * (2 * y + 1)
+    return c_dots, 0
+
+
 def draw_ell(dot_center, a, b, color, method):
     global last_activity, dots
     if color == 0:
@@ -349,11 +393,11 @@ def draw_ell(dot_center, a, b, color, method):
         t3 = float(a)
         t4 = float(b)
         if method == 0:
-            tmp = copy.deepcopy(list(canon_method_ell([t1, t2], t3, t4, color)[0]))
+            tmp = copy.deepcopy(list(ell_canon_method([t1, t2], t3, t4, color)[0]))
         if method == 1:
             tmp = copy.deepcopy(list(ell_param_method([t1, t2], t3, t4, color)[0]))
         if method == 2:
-            tmp = copy.deepcopy(list(bresenham_method_ell([t1, t2], t3, t4, color)[0]))
+            tmp = copy.deepcopy(list(ell_bresenham_method([t1, t2], t3, t4, color)[0]))
         if method == 3:
             tmp = copy.deepcopy(list(mid_dot_method_ell([t1, t2], t3, t4, color)[0]))
         if method == 4:
