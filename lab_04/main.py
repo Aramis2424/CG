@@ -16,7 +16,7 @@ RADIUS = 3
 EPS = 1e-8
 
 IS_FIRST_DOT = True
-dots_for_line = []
+dots_for_cir = []
 
 dots = []
 last_activity = []
@@ -32,24 +32,6 @@ TASK = '''Реализовать алгоритмы построения окр�
 
 def del_all_dots():
     canvas.delete("all")
-
-##import tkinter as tk
-##from math import cos, sin, radians
-##
-##root = tk.Tk()
-##canvas = tk.Canvas(root, width=400, height=400)
-##
-##x_offset = 200
-##y_offset = 200
-##radius = 100
-##
-##coords = [ (radius * cos(radians(angle)), radius * sin(radians(angle))) for angle in range(360)]
-##
-### Замыкаем круг путём добавления первой координаты в конец списка.
-### Иначе будет разрыв между последней и первой точкой.
-##coords.append(coords[0])
-##for (x1, y1), (x2, y2) in zip(coords, coords[1:]):
-##    canvas.create_line(x_offset + x1, y_offset + y1, x_offset + x2, y_offset + y2, width=3)
 
 
 #Окружности
@@ -324,6 +306,29 @@ def draw():
                     dot[0] + 1, dot[1], fill=dot[2])
 
 
+def draw_manual(event, color, method):
+    global IS_FIRST_DOT, dots_for_cir, canvas
+    center_dot = 0
+    if IS_FIRST_DOT:
+        IS_FIRST_DOT = False
+        dots_for_cir.append([event.x, event.y])
+        center_dot = canvas.create_oval(
+                event.x - RADIUS, event.y - RADIUS,
+                event.x + RADIUS, event.y + RADIUS,
+                fill="#001", outline="#001", width=1
+            )
+    else:
+        canvas.delete(center_dot)
+        IS_FIRST_DOT = True
+        x1 = dots_for_cir[0][0]
+        y1 = dots_for_cir[0][1]
+        x2 = float(event.x)
+        y2 = float(event.y)
+        radius = sqrt((x1-x2)**2 + (y1-y2)**2)
+        draw_cir(dots_for_cir[0], radius, color, method)
+        dots_for_cir.clear()
+
+
 def main():
     global canvas
 
@@ -525,7 +530,7 @@ def main():
     canvas = Canvas(root, bg="#148012", #148012
                         highlightthickness=4, highlightbackground="#6b3e07")
     canvas.place(relx=0.3, rely=0, relwidth=0.7, relheight=1)
-    canvas.bind("<Button-1>", lambda e: add_dot_event(e, color_combo.current(),
+    canvas.bind("<Button-1>", lambda e: draw_manual(e, color_combo.current(),
                 method_combo.current()))
 
     #Меню
