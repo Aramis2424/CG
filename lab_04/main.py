@@ -243,6 +243,43 @@ def ell_lib_method(center, a, b, color):
                     )
 
 
+def canon_method_ell(dot_center, a, b, color):
+    x_c = dot_center[0]
+    y_c = dot_center[1]
+    c_dots = []
+    color = color.hex
+    a2 = a * a
+    b2 = b * b
+    end = round(a / sqrt(1 + b2 / a2))
+
+    x = 0
+
+    while x <= end:
+        y = round(sqrt(1 - x * x / a2) * b)
+
+        c_dots.append([x_c + x, y_c + y, color])
+        c_dots.append([x_c - x, y_c + y, color])
+        c_dots.append([x_c + x, y_c - y, color])
+        c_dots.append([x_c - x, y_c - y, color])
+
+        x += 1
+
+    end = round(b2 / sqrt(a2 + b2))
+
+    y = 0
+
+    while y <= end:
+        x = round(sqrt(1 - y * y / b2) * a)
+
+        c_dots.append([x_c + x, y_c + y, color])
+        c_dots.append([x_c - x, y_c + y, color])
+        c_dots.append([x_c + x, y_c - y, color])
+        c_dots.append([x_c - x, y_c - y, color])
+
+        y += 1
+    return c_dots, 0
+
+
 def draw_ell(dot_center, a, b, color, method):
     global last_activity, dots
     if color == 0:
