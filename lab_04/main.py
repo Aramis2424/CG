@@ -59,7 +59,7 @@ def cir_lib_method(center, radius, color):
     canvas.create_oval(
                     x_c - radius, y_c - radius,
                     x_c + radius, y_c + radius,
-                    fill="#148012", outline=color, width=1
+                    fill="", outline=color, width=1
                     )
 
 
