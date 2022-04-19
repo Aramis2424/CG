@@ -441,6 +441,70 @@ def draw_manual(event, color, method):
         draw_cir(dots_for_cir[0], radius, color, method)
         dots_for_cir.clear()
 
+def spec_cir(step, count, start, end, method):
+    global canvas
+    cc = 0 # Проверка данных, три из следующих четырех параметров
+    flag = 0
+    try:
+        step = float(step)
+    except:
+        cc += 1
+        flag = 1
+    try:
+        count = float(count)
+    except:
+        cc += 1
+        flag = 2
+    try:
+        start = float(start)
+    except:
+        cc += 1
+        flag = 3
+    try:
+        end = float(end)
+    except:
+        cc += 1
+        flag = 4
+
+    if cc > 1:
+        messagebox.showerror("Ошибка", "Неверно введены данные")
+        return
+
+    if flag == 1: # три из следующих четырех параметров
+        step = int((end - start) / count)
+    elif flag == 2:
+        count = int((end - start) / step)
+    elif flag == 3:
+        start = float(end - step * count)
+    elif flag == 4:
+        end = float(start + step * count)
+
+    radius = start
+
+    dot_center = [canvas.winfo_width() // 2,\
+                  canvas.winfo_height() // 2]
+
+    index = 0
+
+    while index < count:
+        if method == 0:
+            tmp = copy.deepcopy(list(cir_canon_method(dot_center,\
+                                radius, c)[0]))
+        if method == 1:
+            tmp = copy.deepcopy(list(cir_param_method(dot_center,\
+                                radius, c)[0]))
+        if method == 2:
+            tmp = copy.deepcopy(list(cir_bresenham_method(dot_center,\
+                                radius, c)[0]))
+        if method == 3:
+            tmp = copy.deepcopy(list(cir_mid_dot_method(dot_center,\
+                                radius, c)[0]))
+        dots.append(tmp)
+        radius += step
+        index += 1
+    last_activity.append(copy.deepcopy(dots))
+    draw()
+
 
 def main():
     global canvas
@@ -596,10 +660,11 @@ def main():
 
     spec_c_btn = Button(text="Построить спектр окружности",
                   bg='#6b7a0a',
-                  activebackground='#6b7a0a')#,
-                  #command=lambda: drawLine([line_x1.get(), line_y1.get()],
-                  #[line_x2.get(), line_y2.get()], color_combo.current(),
-                  #method_combo.current()))
+                  activebackground='#6b7a0a',
+                  command=lambda: spec_cir(line_xspec_c.get(),\
+                                  line_yspec_c.get(),\
+                                  line_rspec_cb.get(), line_rspec_cf.get(),
+                                  method_combo.current()))
     spec_c_btn.place(relx=0, rely=0.755, relwidth=0.3, relheight=0.05)
 
     #Спектр эллипса
