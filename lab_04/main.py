@@ -441,7 +441,7 @@ def draw_manual(event, color, method):
         draw_cir(dots_for_cir[0], radius, color, method)
         dots_for_cir.clear()
 
-def spec_cir(step, count, start, end, method):
+def spec_cir(step, count, start, end, color, method):
     global canvas
     cc = 0 # Проверка данных, три из следующих четырех параметров
     flag = 0
@@ -476,7 +476,7 @@ def spec_cir(step, count, start, end, method):
         count = int((end - start) / step)
     elif flag == 3:
         start = float(end - step * count)
-    elif flag == 4:
+    else:
         end = float(start + step * count)
 
     radius = start
@@ -487,21 +487,42 @@ def spec_cir(step, count, start, end, method):
     index = 0
 
     while index < count:
-        if method == 0:
-            tmp = copy.deepcopy(list(cir_canon_method(dot_center,\
-                                radius, c)[0]))
-        if method == 1:
-            tmp = copy.deepcopy(list(cir_param_method(dot_center,\
-                                radius, c)[0]))
-        if method == 2:
-            tmp = copy.deepcopy(list(cir_bresenham_method(dot_center,\
-                                radius, c)[0]))
-        if method == 3:
-            tmp = copy.deepcopy(list(cir_mid_dot_method(dot_center,\
-                                radius, c)[0]))
-        dots.append(tmp)
+        draw_cir(dot_center, radius, color, method)
         radius += step
         index += 1
+    last_activity.append(copy.deepcopy(dots))
+    draw()
+
+
+def spec_ell(step, count, a, b, color, method):
+    try: #прием данныйх
+        step = float(step)
+        count = float(count)
+        a = float(a)
+        b = float(b)
+    except:
+        messagebox.showerror("Ошибка", "Неверно введены данные")
+        return
+
+    if step <= 0 or count <= 0 or a <= 0 or b <= 0: #проверка данных
+        messagebox.showerror("Ошибка", "Неверно введены данные")
+        return
+
+    dot_center = [canvas.winfo_width() // 2,\
+                   canvas.winfo_height() // 2] # Находим центр
+    kk = b / a # коэф-нт прибавления по b
+
+    index = 0
+
+    while index < count:
+        # Строим эллипс по методу
+        draw_ell(dot_center, a, b, color, method)
+
+        #Прибавление данных
+        a += step
+        b = a * kk
+        index += 1
+
     last_activity.append(copy.deepcopy(dots))
     draw()
 
@@ -664,6 +685,7 @@ def main():
                   command=lambda: spec_cir(line_xspec_c.get(),\
                                   line_yspec_c.get(),\
                                   line_rspec_cb.get(), line_rspec_cf.get(),
+                                  color_combo.current(),
                                   method_combo.current()))
     spec_c_btn.place(relx=0, rely=0.755, relwidth=0.3, relheight=0.05)
 
@@ -698,10 +720,13 @@ def main():
 
     spec_e_btn = Button(text="Построить спектр эллипса",
                   bg='#6b7a0a',
-                  activebackground='#6b7a0a')#,
-                  #command=lambda: drawLine([line_x1.get(), line_y1.get()],
-                  #[line_x2.get(), line_y2.get()], color_combo.current(),
-                  #method_combo.current()))
+                  activebackground='#6b7a0a',
+                  command=lambda: spec_ell(
+                                  line_xspec_e.get(),\
+                                  line_yspec_e.get(),\
+                                  line_rspec_eb.get(), line_rspec_ef.get(),
+                                  color_combo.current(),
+                                  method_combo.current()))
     spec_e_btn.place(relx=0, rely=0.945, relwidth=0.3, relheight=0.05)
 
     #Canvas
