@@ -262,6 +262,75 @@ def canon_method_ell(dot_center, a, b, color):
     return c_dots, 0
 
 
+def ell_param_method(dot_center, a, b, color):
+    x_c = dot_center[0]
+    y_c = dot_center[1]
+    c_dots = []
+    color = color.hex
+    if a > b:
+        step = 1 / a
+    else:
+        step = 1 / b
+
+    alpha = 0
+
+    while alpha < pi / 2 + step:
+        x = round(a * cos(alpha))
+        y = round(b * sin(alpha))
+
+        c_dots.append([x_c + x, y_c + y, color])
+        c_dots.append([x_c - x, y_c + y, color])
+        c_dots.append([x_c + x, y_c - y, color])
+        c_dots.append([x_c - x, y_c - y, color])
+
+        alpha += step
+    return c_dots, 0
+
+
+def ell_bresenham_method(dot_center, a, b, color):
+    x_c = round(dot_center[0])
+    y_c = round(dot_center[1])
+    c_dots = []
+    color = color.hex
+    x = 0
+    y = b
+
+    a2 = a ** 2
+    b2 = b ** 2
+
+    delta = b2 - a2 * (2 * y + 1)
+    tmp_pxl = 1
+    err = 0
+
+    while y >= 0:
+        c_dots.append([x_c + x, y_c + y, color])
+        c_dots.append([x_c - x, y_c + y, color])
+        c_dots.append([x_c + x, y_c - y, color])
+        c_dots.append([x_c - x, y_c - y, color])
+
+        if delta <= 0:
+            err = 2 * delta + (2 * y + 2) * a2
+
+            if err < 0:
+                x = x + 1
+                delta = delta + (2 * x) * b2 + b2
+            else:
+                x = x + 1
+                y = y - 1
+                delta = delta + (2 * x) * b2 - (2 * y) * a2 + (a2 + b2)
+        elif delta > 0:
+            err = 2 * delta + (- 2 * x + 2) * b2
+
+            if err < 0:
+                x = x + 1
+                y = y - 1
+                delta = delta + (2 * x) * b2 - (2 * y) * a2 + (a2 + b2)
+            else:
+                y = y - 1
+                delta = delta - (2 * y) * a2 + a2
+    return c_dots, 0
+
+
 def draw_ell(dot_center, a, b, color, method):
     global last_activity, dots
     if color == 0:
@@ -282,7 +351,7 @@ def draw_ell(dot_center, a, b, color, method):
         if method == 0:
             tmp = copy.deepcopy(list(canon_method_ell([t1, t2], t3, t4, color)[0]))
         if method == 1:
-            tmp = copy.deepcopy(list(param_method_ell([t1, t2], t3, t4, color)[0]))
+            tmp = copy.deepcopy(list(ell_param_method([t1, t2], t3, t4, color)[0]))
         if method == 2:
             tmp = copy.deepcopy(list(bresenham_method_ell([t1, t2], t3, t4, color)[0]))
         if method == 3:
