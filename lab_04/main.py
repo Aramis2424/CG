@@ -17,6 +17,7 @@ EPS = 1e-8
 
 IS_FIRST_DOT = True
 dots_for_cir = []
+center_dot = 0
 
 dots = []
 last_activity = []
@@ -412,7 +413,7 @@ def draw_ell(dot_center, a, b, color, method):
 
 def draw():
     global last_activity, dots
-    canvas.delete("all")
+    #canvas.delete("all")
     for line in dots:
         for dot in line:
             canvas.create_line(dot[0], dot[1],
@@ -420,8 +421,8 @@ def draw():
 
 
 def draw_manual(event, color, method):
-    global IS_FIRST_DOT, dots_for_cir, canvas
-    center_dot = 0
+    global IS_FIRST_DOT, dots_for_cir, canvas, center_dot
+    #center_dot = 0
     if IS_FIRST_DOT:
         IS_FIRST_DOT = False
         dots_for_cir.append([event.x, event.y])
@@ -432,6 +433,7 @@ def draw_manual(event, color, method):
             )
     else:
         canvas.delete(center_dot)
+        canvas.update()
         IS_FIRST_DOT = True
         x1 = dots_for_cir[0][0]
         y1 = dots_for_cir[0][1]
@@ -508,11 +510,17 @@ def spec_cir(step, count, start, end, color, method):
             tmp = copy.deepcopy(list(cir_bresenham_method(dot_center, radius, color)[0]))
         if method == 3:
             tmp = copy.deepcopy(list(cir_mid_dot_method(dot_center, radius, color)[0]))
+        if method == 4:
+            cir_lib_method(dot_center, radius, color)
+            radius += step
+            index += 1
+            continue
         dots.append(tmp)
         radius += step
         index += 1
     last_activity.append(copy.deepcopy(dots))
-    draw()
+    if method != 4:
+        draw()
 
 
 def spec_ell(step, count, a, b, color, method):
@@ -545,7 +553,8 @@ def spec_ell(step, count, a, b, color, method):
         index += 1
 
     last_activity.append(copy.deepcopy(dots))
-    draw()
+    if method != 4:
+        draw()
 
 def time_diagram():
     dot_center = [canvas.winfo_width() // 2, canvas.winfo_height() // 2]
