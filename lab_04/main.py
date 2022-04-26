@@ -38,16 +38,24 @@ def del_all_dots():
 
 
 #Окружности
-def cir_lib_method(center, radius, color):
+def cir_lib_method(center, radius, color, is_test_time=False):
     x_c = center[0]
     y_c = center[1]
     color = color.hex
 
-    canvas.create_oval(
-                    x_c - radius, y_c - radius,
-                    x_c + radius, y_c + radius,
-                    fill="", outline=color, width=1
-                    )
+    if is_test_time:
+        color = '#148012'
+        canvas.create_oval(
+                        x_c - radius, y_c - radius,
+                        x_c + radius, y_c + radius,
+                        fill="", outline=color, width=1
+                        )
+    else:
+        canvas.create_oval(
+                        x_c - radius, y_c - radius,
+                        x_c + radius, y_c + radius,
+                        fill="", outline=color, width=1
+                        )
 
 
 def cir_canon_method(center, radius, color):
@@ -216,16 +224,24 @@ def draw_cir(center, radius, color, method):
 
 
 #Эллипсы
-def ell_lib_method(center, b, a, color):
+def ell_lib_method(center, b, a, color, is_test_time=False):
     x_c = center[0]
     y_c = center[1]
     color = color.hex
 
-    canvas.create_oval(
-                    x_c - b, y_c - a,
-                    x_c + b, y_c + a,
-                    fill="", outline=color, width=1
-                    )
+    if is_test_time:
+        color = '#148012'
+        canvas.create_oval(
+                        x_c - b, y_c - a,
+                        x_c + b, y_c + a,
+                        fill="", outline=color, width=1
+                        )
+    else:
+        canvas.create_oval(
+                        x_c - b, y_c - a,
+                        x_c + b, y_c + a,
+                        fill="", outline=color, width=1
+                        )
 
 
 def ell_canon_method(dot_center, a, b, color):
@@ -560,10 +576,10 @@ def time_diagram():
     dot_center = [canvas.winfo_width() // 2, canvas.winfo_height() // 2]
     color = Color(hex="#fff")
 
-    ddt = 100
-    var = 10
-    res_time = [0] * 8
-    for i in range(8):
+    ddt = 10
+    var = 1000
+    res_time = [0] * 10
+    for i in range(10):
         res_time[i] = [0] * 10
     count_ = 0
     for i in range(10, 20):
@@ -591,31 +607,43 @@ def time_diagram():
         t2 = time.time()
         res_time[3][count_] = ((t2 - t1) / var)
 
+        t1 = time.time()
+        for k in range(var):
+            cir_lib_method(dot_center, ddt * i, color, True)
+        t2 = time.time()
+        res_time[4][count_] = ((t2 - t1) / var)
+
         ###############
 
         t1 = time.time()
         for k in range(var):
             ell_canon_method(dot_center, ddt * i, ddt * 2 * i, color)
         t2 = time.time()
-        res_time[4][count_] = ((t2 - t1) / var)
+        res_time[5][count_] = ((t2 - t1) / var)
 
         t1 = time.time()
         for k in range(var):
             ell_param_method(dot_center, ddt * i, ddt * 2 * i, color)
         t2 = time.time()
-        res_time[5][count_] = ((t2 - t1) / var)
+        res_time[6][count_] = ((t2 - t1) / var)
 
         t1 = time.time()
         for k in range(var):
             ell_bresenham_method(dot_center, ddt * i, ddt * 2 * i, color)
         t2 = time.time()
-        res_time[6][count_] = ((t2 - t1) / var)
+        res_time[7][count_] = ((t2 - t1) / var)
 
         t1 = time.time()
         for k in range(var):
             ell_mid_dot_method(dot_center, ddt * i, ddt * 2 * i, color)
         t2 = time.time()
-        res_time[7][count_] = ((t2 - t1) / var)
+        res_time[8][count_] = ((t2 - t1) / var)
+
+        t1 = time.time()
+        for k in range(var):
+            ell_lib_method(dot_center, ddt * i, ddt * 2 * i, color, True)
+        t2 = time.time()
+        res_time[9][count_] = ((t2 - t1) / var)
 
         count_ += 1
 
@@ -626,6 +654,7 @@ def time_diagram():
     plt.plot(rad_arr, res_time[1], label="Параметрическое\nуравнение")
     plt.plot(rad_arr, res_time[2], label="Брезенхем")
     plt.plot(rad_arr, res_time[3], label="Алгоритм\nсредней точки")
+    plt.plot(rad_arr, res_time[4], label="Библиотечный\nалгоритм")
     plt.xticks(list(i * ddt for i in range(10, 20)))
     plt.ylabel("Время")
     plt.xlabel("Радиус")
@@ -633,10 +662,14 @@ def time_diagram():
 
     plt.subplot(1, 2, 2)
     plt.title("Эффективность алгоритмов (эллипс)")
-    plt.plot(rad_arr, res_time[4], label="Каноническое\nуравнеие\n(Эллипс)")
-    plt.plot(rad_arr, res_time[5], label="Параметрическое\nуравнение\n(Эллипс)")
-    plt.plot(rad_arr, res_time[6], label="Брезенхем\n(Эллипс)")
-    plt.plot(rad_arr, res_time[7], label="Алгоритм\nсредней точки\n(Эллипс)")
+    plt.plot(rad_arr, res_time[5], label="Каноническое\nуравнеие\n(Эллипс)")
+    plt.plot(rad_arr, res_time[6], label="Параметрическое\nуравнение\n(Эллипс)")
+    plt.plot(rad_arr, res_time[7], label="Брезенхем\n(Эллипс)")
+    plt.plot(rad_arr, res_time[8], label="Алгоритм\nсредней точки\n(Эллипс)")
+    plt.plot(rad_arr, res_time[9], label="Библиотечный\nалгоритм")
+    plt.ylabel("Время")
+    plt.xlabel("Радиус")
+    #plt.legend()
 
 
     plt.show()
