@@ -233,7 +233,6 @@ def update_y_group(x_start, y_start, x_end, y_end):
             y_groups[y_end].extend([[x_end, x_step, y_proj]])
 
 
-
 def check_active_edges(active_edges):
     i = 0
     while i < len(active_edges):
@@ -254,17 +253,19 @@ def add_active_edges(y_groups, active_edges, y):
 
 def draw_scanline(y, color):
     global active_edges, canvas
+    print(active_edges)
     for i in range(0, len(active_edges), 2):
         canvas.create_line(int(active_edges[i][0]),
                             y,
-                            round(active_edges[i+1][0]) + 0,
-                            y+0,
+                            round(active_edges[i+1][0]),
+                            y,
                             fill=color
                            )
 
 
 def fill(root, delay, color, label_time_2):
     global active_edges, y_groups, y_max, y_min, canvas, RESULT, IS_END_FIG
+    print(y_groups)
 
     if not IS_END_FIG:
         messagebox.showerror("Ошибка", "Нет фигуры для закраски")
@@ -311,7 +312,7 @@ def main():
     edges = [[]]
     y_groups = dict()
     y_max = 0
-    y_min = 1000
+    y_min = HEIGHT
     active_edges = []
 
     #Окно

@@ -577,7 +577,7 @@ def time_diagram():
     color = Color(hex="#fff")
 
     ddt = 10
-    var = 1000
+    var = 100
     res_time = [0] * 10
     for i in range(10):
         res_time[i] = [0] * 10
