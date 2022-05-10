@@ -11,6 +11,7 @@ from math import sqrt, cos, sin, pi
 from math import fabs, floor
 from tkinter import Tk, Button, Label, Entry, END, Listbox, Canvas, Radiobutton, LEFT, RIGHT, IntVar, PhotoImage
 from tkinter import messagebox
+import time
 
 WIDE = 1000
 WIDTH = 1000
@@ -26,6 +27,8 @@ IS_FIRST_DOT = True
 dots_for_cir = []
 center_dot = 0
 
+center_pix = (0, 0)
+
 dots = []
 last_activity = []
 
@@ -33,19 +36,22 @@ TASK = 'Алгоритм с упорядоченным списком ребер
 
 
 def del_all_dots():
-    global edges, active_edges, y_groups, y_max, y_min, canvas, RESULT
-    RESULT = False
-    edges = [[]]
+    global edges, active_edges, y_groups, y_max, y_min, canvas, RESULT, image_canvas, stack
+    #RESULT = False
+    stack = []
     x_draw = 0
     y_draw = 0
+    image_canvas.put("#148012", to = (0, 0, 5000, 5000))
 
-    canvas.delete("all")
+    #canvas.delete("all")
 
 
 def draw_line(dots):
+    global image_canvas
     for line in dots:
         for dot in line:
-            canvas.create_line(dot[0], dot[1], dot[0] + 1, dot[1], fill=dot[2])
+            image_canvas.put(dot[2], (dot[0], dot[1]))
+            #canvas.create_line(dot[0], dot[1]+10, dot[0] + 1, dot[1]+10, fill=dot[2])
 
 
 def bresenham_int(x_start, y_start, x_end, y_end, color):
@@ -198,7 +204,9 @@ def end_fig(event, color):
 
 
 def add_pix(event, color):
-    global x_draw, y_draw, stack
+    global x_draw, y_draw, stack, center_pix, canvas
+
+    image_canvas.put("#148012", center_pix)
 
     if color == 0:
         color = "#000000"
@@ -214,11 +222,16 @@ def add_pix(event, color):
     x_draw = event.x
     y_draw = event.y
     stack.extend([[x_draw, y_draw]])
-    canvas.create_line(x_draw, y_draw, x_draw + 1, y_draw, fill=color)
+    #canvas.create_line(x_draw, y_draw, x_draw + 1, y_draw, fill=color)
+    center_pix = (x_draw, y_draw)
+
+    image_canvas.put(color, (x_draw, y_draw))
 
 
 def add_pix_by_btn(x1, y1, color):
-    global x_draw, y_draw, stack
+    global x_draw, y_draw, stack, center_pix
+
+    image_canvas.put("#148012", center_pix)
 
     try:
         x = int(x1)
@@ -241,7 +254,11 @@ def add_pix_by_btn(x1, y1, color):
     x_draw = x
     y_draw = y
     stack.extend([[x_draw, y_draw]])
-    canvas.create_line(x_draw, y_draw, x_draw + 1, y_draw, fill=color)
+
+    #canvas.create_line(x_draw, y_draw, x_draw + 1, y_draw, fill=color)
+
+    center_pix = (x_draw, y_draw)
+    image_canvas.put(color, (x_draw, y_draw))
 
 
 def hex_to_dec(hex):
@@ -249,7 +266,9 @@ def hex_to_dec(hex):
 
 
 def fill(root, delay, color, label_time_2):
-    global edges, active_edges, y_groups, y_max, y_min, canvas, stack, x_draw, y_draw
+    global edges, active_edges, y_groups, y_max, y_min, canvas, stack, x_draw, y_draw, image_canvas
+
+    #print(stack)
 
     if color == 0:
         color = "#000000"
@@ -262,21 +281,26 @@ def fill(root, delay, color, label_time_2):
     if color == 4:
         color = "#148012"
 
-    color = hex_to_dec(color)
+    #color = hex_to_dec(color)
+    start = time.time()
 
     while stack:
         point = stack.pop()
-        image.put(color, (point[0], point[1]))
+        #print(point)
+        image_canvas.put(color, (point[0], point[1]))
 
         x, y = point[0] + 1, point[1]
-        while image.get(x, y) != color:
-            image.put(color, (x, y))
+        while image_canvas.get(x, y) != hex_to_dec(color) and x < WIDTH:
+            #if (image_canvas.get(x, y) != (255, 255, 255)):
+             #   print(hex_to_dec(color), '-->', image_canvas.get(x, y))
+            image_canvas.put(color, (x, y))
             x += 1
+
         rborder = x - 1
 
         x = point[0] - 1
-        while image.get(x, y) != color:
-            image.put(color, (x, y))
+        while image_canvas.get(x, y) != hex_to_dec(color) and x > 0:
+            image_canvas.put(color, (x, y))
             x -= 1
         lborder = x + 1
 
@@ -286,16 +310,20 @@ def fill(root, delay, color, label_time_2):
             x = lborder
             y = point[1] + i
 
+            if y > HEIGHT or y < 0:
+                break
+
             while x <= rborder:
                 is_exist = False
-                while image.get(x, y) != color and x <= rborder:
+                while image_canvas.get(x, y) != hex_to_dec(color) and x <= rborder:
                     is_exist = True
                     x += 1
                 if is_exist:
                     stack.extend([[x - 1, y]])
+                    #print(stack)
                     is_exist = False
                 xi = x
-                while image.get(x, y) != color and x <= rborder:
+                while image_canvas.get(x, y) != hex_to_dec(color) and x <= rborder:
                     x += 1
                 if x == xi:
                     x += 1
@@ -303,12 +331,17 @@ def fill(root, delay, color, label_time_2):
         if delay:
             time.sleep(0.01)
             canvas.update()
+    end = time.time()
+
+    prog_time = round((end - start), 3)
+
+    label_time_2.config(text = str(prog_time))
 
 def main():
-    global edges, active_edges, y_groups, y_max, y_min, canvas, stack, x_draw, y_draw
+    global edges, active_edges, y_groups, y_max, y_min, canvas, stack, x_draw, y_draw, image_canvas
 
-    image_canvas = PhotoImage(width = WIDE, height = HEIGHT)
-    image_canvas.put("#148012", to = (0, 0, WIDE, HEIGHT))
+    #image_canvas = PhotoImage(width = WIDE, height = HEIGHT)
+    #image_canvas.put("#148012", to = (0, 0, WIDE, HEIGHT))
 
     edges = [[]]
     stack = []
@@ -323,7 +356,7 @@ def main():
     #Окно
     root = Tk()
     root.geometry("%dx%d" % (WIDTH, HEIGHT))
-    root.title("Лабораторная работа №5")
+    root.title("Лабораторная работа №6")
     root.minsize(WIDTH, HEIGHT)
     root["bg"] = "#6b5a45"
 
@@ -447,7 +480,6 @@ def main():
                               bg='#6b7a0a')
     label_time_2.place(relx=0, rely=0.9, relwidth=0.4, relheight=0.04)
 
-
     #Canvas
     canvas = Canvas(root, bg="#148012", #148012
                         highlightthickness=4, highlightbackground="#6b3e07")
@@ -458,6 +490,14 @@ def main():
         color_combo.current()))
     canvas.bind("<Button-2>", lambda event: add_pix(event,
                                     color_combo.current()))
+    root.bind("<space>",
+                lambda event: fill(event, type_combo.current(),
+                                    color_combo.current(),
+                                    label_time_2))
+
+    image_canvas = PhotoImage(width = 5000, height = 5000)
+    canvas.create_image((2500, 2500), image = image_canvas, state = "normal")
+    image_canvas.put("#148012", to = (0, 0, 5000, 5000))
 
     #Меню
     menu = Menu(root)
@@ -473,6 +513,12 @@ def main():
     #Команды
     #root.bind("<Control-z>", lambda e: last_event(e))
 
+    #image_canvas.put("#000000", to = (0, 0, 250, 250))
+    #image_canvas.put("red", to=(0, 0, 100, 500))
+    #for i in range(95, 105):
+     #   print(image_canvas.get(i, 100))
+      #  print(i, 100)
+       # canvas.create_line(i, 100, i+1, 100, fill="blue")
     root.mainloop()
 
 if __name__ == "__main__":
