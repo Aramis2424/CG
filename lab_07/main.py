@@ -181,7 +181,6 @@ def draw_sides():
 
             color_line = side[2]
 
-            #bresenham_int([x1, y1], [x2, y2], line_color)
 
             canvas.create_line(x1, y1, x2, y2, fill = color_line)
 
@@ -201,27 +200,22 @@ def parse_color(color):
     return color
 
 
-def hex_to_dec(hex):
-    return (int(hex[1:3], 16), int(hex[3:5], 16), int(hex[5:7], 16))
-
-
-# Algorithm
-
+# Сам алгоритм
 def get_dot_bits(rect, dot):
     bits = 0b0000
 
     #print(rect, dot)
 
     if (dot[X_DOT] < rect[X_MIN]):
-        bits += 0b0001
+        bits += 0b0001 # за левой границей
 
-    if (dot[X_DOT] > rect[X_MAX]):
+    if (dot[X_DOT] > rect[X_MAX]): # за правой гарницей
         bits += 0b0010
 
-    if (dot[Y_DOT] > rect[Y_MIN]): # из-за экранной системы координат поменены
+    if (dot[Y_DOT] > rect[Y_MIN]): # за верхней границей
         bits += 0b0100
 
-    if (dot[Y_DOT] < rect[Y_MAX]): # из-за экранной системы координат поменены
+    if (dot[Y_DOT] < rect[Y_MAX]): # за нижней границей
         bits += 0b1000
 
     return bits
@@ -260,7 +254,7 @@ def method_sazerland_kohen(rect, line, color):
     if (dot1[X_DOT] == dot2[X_DOT]):
         fl = -1 # вертикальный
     else:
-        m = (dot2[Y_DOT] - dot1[Y_DOT]) / (dot2[X_DOT] - dot1[X_DOT])
+        m = (dot2[Y_DOT] - dot1[Y_DOT]) / (dot2[X_DOT] - dot1[X_DOT]) # тангенс
 
         if (m == 0):
             fl = 1 # горизонтальный
@@ -280,9 +274,7 @@ def method_sazerland_kohen(rect, line, color):
             continue
 
         if get_bit(dot1_bits, i) == 0:
-            tmp = dot1
-            dot1 = dot2
-            dot2 = tmp
+            dot1, dot2 = dot2, dot1
 
         if (fl != -1):
             if (i < 2):
@@ -296,8 +288,57 @@ def method_sazerland_kohen(rect, line, color):
 
     res_color = parse_color(color)
 
-    canvas.create_line(dot1[X_DOT], dot1[Y_DOT], dot2[X_DOT]-1, dot2[Y_DOT]+0,
+    if dot1[X_DOT] > dot2[X_DOT]:
+        dot1, dot2 = dot2, dot1
+
+    if dot1[Y_DOT] > dot2[Y_DOT] and dot1[Y_DOT] < rect[2]:
+        canvas.create_line(dot1[X_DOT], dot1[Y_DOT]+1, dot2[X_DOT]+1, dot2[Y_DOT],
                         fill = res_color)
+    elif dot1[Y_DOT] < dot2[Y_DOT] and dot2[Y_DOT] < rect[2]:
+        canvas.create_line(dot1[X_DOT], dot1[Y_DOT], dot2[X_DOT]+1, dot2[Y_DOT]+1,
+                        fill = res_color)
+    else:
+        canvas.create_line(dot1[X_DOT], dot1[Y_DOT], dot2[X_DOT]+1, dot2[Y_DOT],
+                            fill = res_color)
+
+##    if dot1[X_DOT] > dot2[X_DOT]:
+##        dot1, dot2 = dot2, dot1
+##
+##    if dot1[Y_DOT] > dot2[Y_DOT]:
+##        if dot1[Y_DOT] < rect[2] and dot2[Y_DOT] > rect[3]:
+##            canvas.create_line(dot1[X_DOT], dot1[Y_DOT]+1,
+##                        dot2[X_DOT]+1, dot2[Y_DOT]-1,
+##                        fill = res_color)
+##        elif dot2[Y_DOT] > rect[3]:
+##            canvas.create_line(dot1[X_DOT], dot1[Y_DOT],
+##                        dot2[X_DOT]+1, dot2[Y_DOT]-1,
+##                        fill = res_color)
+##        elif dot1[Y_DOT] < rect[2]:
+##            canvas.create_line(dot1[X_DOT], dot1[Y_DOT]+1,
+##                        dot2[X_DOT]+1, dot2[Y_DOT],
+##                        fill = res_color)
+##        else:
+##            canvas.create_line(dot1[X_DOT], dot1[Y_DOT],
+##                                dot2[X_DOT]+1, dot2[Y_DOT],
+##                                fill = res_color)
+##
+##    elif dot1[Y_DOT] < dot2[Y_DOT]:
+##        if dot2[Y_DOT] < rect[2] and dot1[Y_DOT] > rect[3]:
+##            canvas.create_line(dot1[X_DOT], dot1[Y_DOT]-1,
+##                        dot2[X_DOT]+1, dot2[Y_DOT]+1,
+##                        fill = res_color)
+##        elif dot2[Y_DOT] > rect[3]:
+##            canvas.create_line(dot1[X_DOT], dot1[Y_DOT],
+##                        dot2[X_DOT]+1, dot2[Y_DOT]+1,
+##                        fill = res_color)
+##        elif dot1[Y_DOT] < rect[2]:
+##            canvas.create_line(dot1[X_DOT], dot1[Y_DOT]-1,
+##                        dot2[X_DOT]+1, dot2[Y_DOT],
+##                        fill = res_color)
+##        else:
+##            canvas.create_line(dot1[X_DOT], dot1[Y_DOT],
+##                                dot2[X_DOT]+1, dot2[Y_DOT],
+##                                fill = res_color)
 
 
 def cut_area(color, rect_color):
@@ -309,6 +350,11 @@ def cut_area(color, rect_color):
 
     rect = [min(rect[0], rect[1]), max(rect[0], rect[1]), max(rect[2], rect[3]),
         min(rect[2], rect[3])]
+
+
+    #canvas.create_rectangle(rect[X_MIN], rect[Y_MAX], rect[X_MAX],
+     #   rect[Y_MIN], fill = "", outline = "#148012")
+
 
     canvas.create_rectangle(rect[X_MIN] + 0, rect[Y_MAX] + 0, rect[X_MAX] - 0,
         rect[Y_MIN] - 0, fill = "#148012", outline = rect_color)
