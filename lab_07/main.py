@@ -292,13 +292,13 @@ def method_sazerland_kohen(rect, line, color):
         dot1, dot2 = dot2, dot1
 
     if dot1[Y_DOT] > dot2[Y_DOT] and dot1[Y_DOT] < rect[2]:
-        canvas.create_line(dot1[X_DOT], dot1[Y_DOT]+1, dot2[X_DOT]+1, dot2[Y_DOT],
+        canvas.create_line(dot1[X_DOT], dot1[Y_DOT]+0, dot2[X_DOT]+0, dot2[Y_DOT],
                         fill = res_color)
     elif dot1[Y_DOT] < dot2[Y_DOT] and dot2[Y_DOT] < rect[2]:
-        canvas.create_line(dot1[X_DOT], dot1[Y_DOT], dot2[X_DOT]+1, dot2[Y_DOT]+1,
+        canvas.create_line(dot1[X_DOT], dot1[Y_DOT], dot2[X_DOT]+0, dot2[Y_DOT]+0,
                         fill = res_color)
     else:
-        canvas.create_line(dot1[X_DOT], dot1[Y_DOT], dot2[X_DOT]+1, dot2[Y_DOT],
+        canvas.create_line(dot1[X_DOT], dot1[Y_DOT], dot2[X_DOT]+0, dot2[Y_DOT],
                             fill = res_color)
 
 ##    if dot1[X_DOT] > dot2[X_DOT]:
