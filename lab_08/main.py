@@ -200,172 +200,6 @@ def parse_color(color):
     return color
 
 
-# Сам алгоритм
-def get_dot_bits(rect, dot):
-    bits = 0b0000
-
-    #print(rect, dot)
-
-    if (dot[X_DOT] < rect[X_MIN]):
-        bits += 0b0001 # за левой границей
-
-    if (dot[X_DOT] > rect[X_MAX]): # за правой гарницей
-        bits += 0b0010
-
-    if (dot[Y_DOT] > rect[Y_MIN]): # за верхней границей
-        bits += 0b0100
-
-    if (dot[Y_DOT] < rect[Y_MAX]): # за нижней границей
-        bits += 0b1000
-
-    return bits
-
-
-def check_visible(dot1_bits, dot2_bits):
-
-    vision = 0 # частично видимый
-
-    if (dot1_bits == 0 and dot2_bits == 0):
-        vision = 1 # видим
-    elif (dot1_bits & dot2_bits):
-        vision = -1 # не видим
-
-    return vision
-
-
-def get_bit(dot_bits, i):
-    return (dot_bits >> i) & 1
-
-
-def are_bits_equal(dot1_bits, dot2_bits, i):
-
-    if get_bit(dot1_bits, i) == get_bit(dot2_bits, i):
-        return True
-
-    return False
-
-
-def method_sazerland_kohen(rect, line, color):
-    dot1 = [line[0][X_DOT], line[0][Y_DOT]]
-    dot2 = [line[1][X_DOT], line[1][Y_DOT]]
-
-    fl = 0
-
-    if (dot1[X_DOT] == dot2[X_DOT]):
-        fl = -1 # вертикальный
-    else:
-        m = (dot2[Y_DOT] - dot1[Y_DOT]) / (dot2[X_DOT] - dot1[X_DOT]) # тангенс
-
-        if (m == 0):
-            fl = 1 # горизонтальный
-
-    for i in range(4):
-        dot1_bits = get_dot_bits(rect, dot1)
-        dot2_bits = get_dot_bits(rect, dot2)
-
-        vision = check_visible(dot1_bits, dot2_bits)
-
-        if (vision == -1):
-            return # выйти и не рисовать
-        elif (vision == 1):
-            break # нарисовать и выйти
-
-        if (are_bits_equal(dot1_bits, dot2_bits, i)):
-            continue
-
-        if get_bit(dot1_bits, i) == 0:
-            dot1, dot2 = dot2, dot1
-
-        if (fl != -1):
-            if (i < 2):
-                dot1[Y_DOT] = m * (rect[i] - dot1[X_DOT]) + dot1[Y_DOT]
-                dot1[X_DOT] = rect[i]
-                continue
-            else:
-                dot1[X_DOT] = (1 / m) * (rect[i] - dot1[Y_DOT]) + dot1[X_DOT]
-
-        dot1[Y_DOT] = rect[i]
-
-    res_color = parse_color(color)
-
-    if dot1[X_DOT] > dot2[X_DOT]:
-        dot1, dot2 = dot2, dot1
-
-    if dot1[Y_DOT] > dot2[Y_DOT] and dot1[Y_DOT] < rect[2]:
-        canvas.create_line(dot1[X_DOT], dot1[Y_DOT]+0, dot2[X_DOT]+0, dot2[Y_DOT],
-                        fill = res_color)
-    elif dot1[Y_DOT] < dot2[Y_DOT] and dot2[Y_DOT] < rect[2]:
-        canvas.create_line(dot1[X_DOT], dot1[Y_DOT], dot2[X_DOT]+0, dot2[Y_DOT]+0,
-                        fill = res_color)
-    else:
-        canvas.create_line(dot1[X_DOT], dot1[Y_DOT], dot2[X_DOT]+0, dot2[Y_DOT],
-                            fill = res_color)
-
-##    if dot1[X_DOT] > dot2[X_DOT]:
-##        dot1, dot2 = dot2, dot1
-##
-##    if dot1[Y_DOT] > dot2[Y_DOT]:
-##        if dot1[Y_DOT] < rect[2] and dot2[Y_DOT] > rect[3]:
-##            canvas.create_line(dot1[X_DOT], dot1[Y_DOT]+1,
-##                        dot2[X_DOT]+1, dot2[Y_DOT]-1,
-##                        fill = res_color)
-##        elif dot2[Y_DOT] > rect[3]:
-##            canvas.create_line(dot1[X_DOT], dot1[Y_DOT],
-##                        dot2[X_DOT]+1, dot2[Y_DOT]-1,
-##                        fill = res_color)
-##        elif dot1[Y_DOT] < rect[2]:
-##            canvas.create_line(dot1[X_DOT], dot1[Y_DOT]+1,
-##                        dot2[X_DOT]+1, dot2[Y_DOT],
-##                        fill = res_color)
-##        else:
-##            canvas.create_line(dot1[X_DOT], dot1[Y_DOT],
-##                                dot2[X_DOT]+1, dot2[Y_DOT],
-##                                fill = res_color)
-##
-##    elif dot1[Y_DOT] < dot2[Y_DOT]:
-##        if dot2[Y_DOT] < rect[2] and dot1[Y_DOT] > rect[3]:
-##            canvas.create_line(dot1[X_DOT], dot1[Y_DOT]-1,
-##                        dot2[X_DOT]+1, dot2[Y_DOT]+1,
-##                        fill = res_color)
-##        elif dot2[Y_DOT] > rect[3]:
-##            canvas.create_line(dot1[X_DOT], dot1[Y_DOT],
-##                        dot2[X_DOT]+1, dot2[Y_DOT]+1,
-##                        fill = res_color)
-##        elif dot1[Y_DOT] < rect[2]:
-##            canvas.create_line(dot1[X_DOT], dot1[Y_DOT]-1,
-##                        dot2[X_DOT]+1, dot2[Y_DOT],
-##                        fill = res_color)
-##        else:
-##            canvas.create_line(dot1[X_DOT], dot1[Y_DOT],
-##                                dot2[X_DOT]+1, dot2[Y_DOT],
-##                                fill = res_color)
-
-
-def cut_area(color, rect_color):
-    global rect, lines
-    rect_color = parse_color(rect_color)
-
-    if (rect[0] == -1):
-        messagebox.showinfo("Ошибка", "Не задан отсекатель")
-
-    rect = [min(rect[0], rect[1]), max(rect[0], rect[1]), max(rect[2], rect[3]),
-        min(rect[2], rect[3])]
-
-
-    #canvas.create_rectangle(rect[X_MIN], rect[Y_MAX], rect[X_MAX],
-     #   rect[Y_MIN], fill = "", outline = "#148012")
-
-
-    canvas.create_rectangle(rect[X_MIN] + 0, rect[Y_MAX] + 0, rect[X_MAX] - 0,
-        rect[Y_MIN] - 0, fill = "#148012", outline = rect_color)
-
-    for line in lines:
-        if (line):
-            method_sazerland_kohen(rect, line, color)
-
-
-    lines = [[]]
-
 
 def main():
     global lines, rect, canvas
@@ -477,35 +311,23 @@ def main():
     add_dot_btn.place(relx=0, rely=0.585, relwidth=0.3, relheight=0.05)
 
     # Ввод отсекателя
-    label_pix = Label(root, text="Координаты отсекателя:", anchor='w',
+    label_pix = Label(root, text="Координаты вершины отсекателя:", anchor='w',
                               bg='#6b7a0a')
     label_pix.place(relx=0, rely=0.655, relwidth=0.3, relheight=0.04)
     # Координаты отсекателя
-    label_xrt = Label(root, text="Xлв:", anchor='c',
+    label_xrt = Label(root, text="X:", anchor='c',
                               bg='#6b7a0a')
     label_xrt.place(relx=0, rely=0.71, relwidth=0.04, relheight=0.06)
     line_xrt = Entry(root, bg='#6b7a0a')
     line_xrt.place(relx=0.043, rely=0.71, relwidth=0.04, relheight=0.06)
 
-    label_yrt = Label(root, text="Yлв:", anchor='c',
+    label_yrt = Label(root, text="Y:", anchor='c',
                               bg='#6b7a0a')
     label_yrt.place(relx=0.1, rely=0.71, relwidth=0.04, relheight=0.06)
     line_yrt = Entry(root, bg='#6b7a0a')
     line_yrt.place(relx=0.143, rely=0.71, relwidth=0.04, relheight=0.06)
 
-    label_xlb = Label(root, text="Xпн:", anchor='c',
-                              bg='#6b7a0a')
-    label_xlb.place(relx=0, rely=0.78, relwidth=0.04, relheight=0.06)
-    line_xlb = Entry(root, bg='#6b7a0a')
-    line_xlb.place(relx=0.043, rely=0.78, relwidth=0.04, relheight=0.06)
-
-    label_ylb = Label(root, text="Yпн:", anchor='c',
-                              bg='#6b7a0a')
-    label_ylb.place(relx=0.1, rely=0.78, relwidth=0.04, relheight=0.06)
-    line_ylb = Entry(root, bg='#6b7a0a')
-    line_ylb.place(relx=0.143, rely=0.78, relwidth=0.04, relheight=0.06)
-
-    draw_clipper_btn = Button(text="Нарисовать отсекатель",
+    draw_clipper_btn = Button(text="Добавить вершину отсекателя",
                   bg='#6b7a0a',
                   activebackground='#6b7a0a',
                   command=lambda: add_clipper(line_xrt.get(),
@@ -514,7 +336,18 @@ def main():
                                     line_ylb.get(),
                                     color_clipper_combo.current())
                    )
-    draw_clipper_btn.place(relx=0, rely=0.85, relwidth=0.3, relheight=0.05)
+    draw_clipper_btn.place(relx=0, rely=0.78, relwidth=0.3, relheight=0.05)
+
+    end_clipper_btn = Button(text="Замкнуть отсекатель",
+                  bg='#6b7a0a',
+                  activebackground='#6b7a0a',
+                  command=lambda: add_clipper(line_xrt.get(),
+                                    line_yrt.get(),
+                                    line_xlb.get(),
+                                    line_ylb.get(),
+                                    color_clipper_combo.current())
+                   )
+    end_clipper_btn.place(relx=0, rely=0.84, relwidth=0.3, relheight=0.05)
 
     # Отсечь
     cutoff_btn = Button(text="Отсечь",
