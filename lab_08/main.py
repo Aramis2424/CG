@@ -12,6 +12,7 @@ from math import fabs, floor
 from tkinter import Tk, Button, Label, Entry, END, Listbox, Canvas, Radiobutton, LEFT, RIGHT, IntVar, PhotoImage
 from tkinter import messagebox
 import time
+from itertools import combinations
 
 WIDE = 1000
 WIDTH = 1000
@@ -48,16 +49,18 @@ center_pix = (0, 0)
 dots = []
 last_activity = []
 
-TASK = 'Алгоритм Сазерленда - Коэна'
+TASK = 'Алгоритм Кируса-Бэка'
 
 
 def del_all_dots():
-    global lines, rect
+    global lines, clipper, IS_FIRST_DOT_CLIP, IS_END_FIG
+    IS_FIRST_DOT_CLIP = True
+    IS_END_FIG = False
 
     canvas.delete("all")
 
     lines = [[]]
-    rect = [-1, -1, -1, -1]
+    clipper = []
 
 
 def add_line(x1, y1, x2, y2, color):
@@ -117,33 +120,51 @@ def add_line_by_click(event, color):
     canvas.create_line(x1, y1, x2, y2, fill = line_color)
 
 
-def add_clipper(x1, y1, x2, y2, color):
-    global rect
+def add_clipper(x, y, color):
+    global clipper, IS_FIRST_DOT_CLIP, x_first_clip,\
+        y_first_clip, center_dot_clip, IS_END_FIG
 
-    try:
-        x_min = int(x1)
-        y_max = int(y1)
-        x_max = int(x2)
-        y_min = int(y2)
-    except:
-        messagebox.showinfo("Ошибка", "Неверно введены координаты")
+    if IS_END_FIG:
+        del_all_dots()
+
+    if IS_FIRST_DOT_CLIP:
+        x_first_clip = int(x)
+        y_first_clip = int(y)
+        clipper.append([x_first_clip, y_first_clip])
+        IS_FIRST_DOT_CLIP = False
+        center_dot_clip = canvas.create_oval(
+                x_first_clip - RADIUS, y_first_clip - RADIUS,
+                x_first_clip + RADIUS, y_first_clip + RADIUS,
+                fill="#fff", outline="#001", width=1
+            )
         return
+    else:
+        canvas.delete(center_dot_clip)
 
-    cutter_color = parse_color(color)
+    x1 = x_first_clip
+    y1 = y_first_clip
+    x2 = int(x)
+    y2 = int(y)
+    #IS_FIRST_DOT_CLIP = True
+    x_first_clip = x2
+    y_first_clip = y2
 
-    canvas.delete("all")
-    canvas.create_rectangle(x_min, y_max, x_max, y_min, outline = cutter_color)
+    clipper_color = parse_color(color)
 
-    rect = [x_min, x_max, y_min, y_max]
-
-    draw_sides()
+    clipper.append([x2, y2])
+    canvas.create_line(x1, y1, x2, y2, fill = clipper_color)
 
 def add_clipper_by_click(event, color):
-    global rect, IS_FIRST_DOT_CLIP, x_first_clip, y_first_clip, center_dot_clip
+    global clipper, IS_FIRST_DOT_CLIP, x_first_clip,\
+        y_first_clip, center_dot_clip, IS_END_FIG
+
+    if IS_END_FIG:
+        del_all_dots()
 
     if IS_FIRST_DOT_CLIP:
         x_first_clip = int(event.x)
         y_first_clip = int(event.y)
+        clipper.append([x_first_clip, y_first_clip])
         IS_FIRST_DOT_CLIP = False
         center_dot_clip = canvas.create_oval(
                 event.x - RADIUS, event.y - RADIUS,
@@ -154,20 +175,35 @@ def add_clipper_by_click(event, color):
     else:
         canvas.delete(center_dot_clip)
 
-    x_min = x_first_clip
-    y_min = y_first_clip
-    x_max = int(event.x)
-    y_max = int(event.y)
-    IS_FIRST_DOT_CLIP = True
+    x1 = x_first_clip
+    y1 = y_first_clip
+    x2 = int(event.x)
+    y2 = int(event.y)
+    #IS_FIRST_DOT_CLIP = True
+    x_first_clip = x2
+    y_first_clip = y2
 
-    cutter_color = parse_color(color)
+    clipper_color = parse_color(color)
 
-    canvas.delete("all")
-    canvas.create_rectangle(x_min, y_max, x_max, y_min, outline = cutter_color)
+    clipper.append([x2, y2])
+    canvas.create_line(x1, y1, x2, y2, fill = clipper_color)
 
-    rect = [x_min, x_max, y_min, y_max]
 
-    draw_sides()
+def end_fig(event, color):
+    global clipper, IS_END_FIG, x_first_clip, y_first_clip, center_dot_clip
+
+    if IS_END_FIG:
+        messagebox.showerror("Ошибка", "Фигура уже замкнута")
+        return
+
+    cur_dot = len(clipper)
+
+    if (cur_dot < 3):
+        messagebox.showerror("Ошибка", "Недостаточно ребер")
+
+    add_clipper(clipper[0][0], clipper[0][1], color)
+    IS_END_FIG = True
+
 
 def draw_sides():
 
@@ -200,12 +236,259 @@ def parse_color(color):
     return color
 
 
+# Алгоритм
+def get_vector(dot1, dot2):
+    return [dot2[X_DOT] - dot1[X_DOT], dot2[Y_DOT] - dot1[Y_DOT]]
+
+
+def vector_mul(vec1, vec2):
+    return (vec1[0] * vec2[1] - vec1[1] * vec2[0])
+
+
+def scalar_mul(vec1, vec2):
+    return (vec1[0] * vec2[0] + vec1[1] * vec2[1])
+
+
+def line_koefs(x1, y1, x2, y2):
+    a = y1 - y2
+    b = x2 - x1
+    c = x1*y2 - x2*y1
+
+    return a, b, c
+
+
+def solve_lines_intersection(a1, b1, c1, a2, b2, c2):
+    opr = a1*b2 - a2*b1
+    opr1 = (-c1)*b2 - b1*(-c2)
+    opr2 = a1*(-c2) - (-c1)*a2
+
+    if (opr == 0):
+        return -5, -5 # прямые параллельны
+
+    x = opr1 / opr
+    y = opr2 / opr
+
+    return x, y
+
+
+def is_coord_between(left_coord, right_coord, dot_coord):
+    return (min(left_coord, right_coord) <= dot_coord) \
+            and (max(left_coord, right_coord) >= dot_coord)
+
+
+def is_dot_between(dot_left, dot_right, dot_intersec):
+    return is_coord_between(dot_left[X_DOT], dot_right[X_DOT], dot_intersec[X_DOT]) \
+            and is_coord_between(dot_left[Y_DOT], dot_right[Y_DOT], dot_intersec[Y_DOT])
+
+
+def are_connected_sides(line1, line2):
+
+    if ((line1[0][X_DOT] == line2[0][X_DOT]) and (line1[0][Y_DOT] == line2[0][Y_DOT])) \
+            or ((line1[1][X_DOT] == line2[1][X_DOT]) and (line1[1][Y_DOT] == line2[1][Y_DOT])) \
+            or ((line1[0][X_DOT] == line2[1][X_DOT]) and (line1[0][Y_DOT] == line2[1][Y_DOT])) \
+            or ((line1[1][X_DOT] == line2[0][X_DOT]) and (line1[1][Y_DOT] == line2[0][Y_DOT])):
+        return True
+
+    return False
+
+
+
+def extra_check(): # чтобы не было пересечений
+
+    clipper_lines = []
+
+    for i in range(len(clipper) - 1):
+        clipper_lines.append([clipper[i], clipper[i + 1]]) # разбиваю отсекатель на линии
+
+    combs_lines = list(combinations(clipper_lines, 2)) # все возможные комбинации сторон
+
+    for i in range(len(combs_lines)):
+        line1 = combs_lines[i][0]
+        line2 = combs_lines[i][1]
+
+        if (are_connected_sides(line1, line2)):
+            #print("Connected")
+            continue
+
+        a1, b1, c1 = line_koefs(line1[0][X_DOT], line1[0][Y_DOT], line1[1][X_DOT], line1[1][Y_DOT])
+        a2, b2, c2 = line_koefs(line2[0][X_DOT], line2[0][Y_DOT], line2[1][X_DOT], line2[1][Y_DOT])
+
+        dot_intersec = solve_lines_intersection(a1, b1, c1, a2, b2, c2)
+
+        if (is_dot_between(line1[0], line1[1], dot_intersec)) \
+                and (is_dot_between(line2[0], line2[1], dot_intersec)):
+            return True
+
+    return False
+
+
+def check_polygon():
+    if (len(clipper) < 3):
+        return False
+
+    sign = 0
+
+    if (vector_mul(get_vector(clipper[1], clipper[2]), get_vector(clipper[0], clipper[1])) > 0):
+        sign = 1
+    else:
+        sign = -1
+
+    for i in range(3, len(clipper)):
+        if sign * vector_mul(get_vector(clipper[i - 1], clipper[i]), get_vector(clipper[i - 2], clipper[i - 1])) < 0:
+            return False
+
+    check = extra_check()
+
+    #print("\n\nResult:", check, "\n\n")
+
+    if (check):
+        return False
+
+    return True
+
+
+def get_normal(dot1, dot2, pos):
+    f_vect = get_vector(dot1, dot2)
+    pos_vect = get_vector(dot2, pos)
+
+    if (f_vect[1]):
+        normal = [1, -f_vect[0] / f_vect[1]]
+    else:
+        normal = [0, 1]
+
+    if (scalar_mul(pos_vect, normal) < 0):
+        normal[0] = -normal[0]
+        normal[1] = -normal[1]
+
+    return normal
+
+
+def cyrus_beck_algorithm(line, count, color_res):
+    dot1 = line[0]
+    dot2 = line[1]
+
+    d = [dot2[X_DOT] - dot1[X_DOT], dot2[Y_DOT] - dot1[Y_DOT]]
+
+    t_bottom = 0
+    t_top = 1
+
+    for i in range(-2, count - 2):
+        normal = get_normal(clipper[i], clipper[i + 1], clipper[i + 2])
+
+        w = [dot1[X_DOT] - clipper[i][X_DOT], dot1[Y_DOT] - clipper[i][Y_DOT]]
+
+        d_scalar = scalar_mul(d, normal)
+        w_scalar = scalar_mul(w, normal)
+
+        if (d_scalar == 0):
+            if (w_scalar < 0):
+                return
+            else:
+                continue
+
+        t = -w_scalar / d_scalar
+
+        if (d_scalar > 0):
+            if (t <= 1):
+                t_bottom = max(t_bottom, t)
+            else:
+                return
+        elif (d_scalar < 0):
+            if (t >= 0):
+                t_top = min(t_top, t)
+            else:
+                return
+
+        if (t_bottom > t_top):
+            break
+
+
+    dot1_res = [round(dot1[X_DOT] + d[X_DOT] * t_bottom), round(dot1[Y_DOT] + d[Y_DOT] * t_bottom)]
+    dot2_res = [round(dot1[X_DOT] + d[X_DOT] * t_top), round(dot1[Y_DOT] + d[Y_DOT] * t_top)]
+
+    res_color = parse_color(color_res)
+
+    if (t_bottom <= t_top):
+        canvas.create_line(dot1_res, dot2_res, fill = res_color)
+
+def find_start_dot():
+    y_max = clipper[0][Y_DOT]
+    dot_index = 0
+
+    for i in range(len(clipper)):
+        if (clipper[i][Y_DOT] > y_max):
+            y_max = clipper[i][Y_DOT]
+            dot_index = i
+
+    clipper.pop()
+
+    for _ in range(dot_index):
+        clipper.append(clipper.pop(0))
+
+    clipper.append(clipper[0])
+
+    if (clipper[-2][0] > clipper[1][0]):
+        clipper.reverse()
+
+def cut_area(color_clipper, color_res):
+    global IS_END_FIG, clipper
+    if not IS_END_FIG:
+        messagebox.showinfo("Ошибка", "Отсекатель не замкнут")
+        return
+
+    if (len(clipper) < 3):
+        messagebox.showinfo("Ошибка", "Не задан отсекатель")
+        return
+
+    if (not check_polygon()):
+        messagebox.showinfo("Ошибка", "Отсекатель должен быть выпуклым многоугольником")
+        return
+
+    clipper_color = parse_color(color_clipper)
+    canvas.create_polygon(clipper, outline = clipper_color, fill = "#148012")
+
+    find_start_dot()
+
+    dot = clipper.pop()
+
+    for line in lines:
+        if (line):
+            cyrus_beck_algorithm(line, len(clipper), color_res)
+
+    clipper.append(dot)
+
+def add_paral_line_clipper(event):
+    #print("Pressed: Space", event.x, event.y)
+
+    dif_x = abs(event.x - clipper[len(clipper) - 1][X_DOT])
+    dif_y = abs(event.y - clipper[len(clipper) - 1][Y_DOT])
+
+    if (dif_x > dif_y):
+        add_dot(event.x, clipper[len(clipper) - 1][Y_DOT])
+    else:
+        add_dot(clipper[len(clipper) - 1][X_DOT], event.y)
+
+
+def add_paral_line_line(event):
+    #print("Pressed: Control_L", event.x, event.y)
+
+    cur_line = len(lines) - 1
+
+    if (len(lines[cur_line]) > 0):
+        dif_x = abs(event.x - lines[cur_line][0][X_DOT])
+        dif_y = abs(event.y - lines[cur_line][0][Y_DOT])
+
+        if (dif_x > dif_y):
+            add_line(event.x, lines[cur_line][0][Y_DOT])
+        else:
+            add_line(lines[cur_line][0][X_DOT], event.y)
+
 
 def main():
-    global lines, rect, canvas
+    global lines, clipper, canvas
 
     lines = [[]]
-    rect = []
+    clipper = []
     x_draw = 0
     y_draw = 0
 
@@ -217,7 +500,7 @@ def main():
     #Окно
     root = Tk()
     root.geometry("%dx%d" % (WIDTH, HEIGHT))
-    root.title("Лабораторная работа №7")
+    root.title("Лабораторная работа №8")
     root.minsize(WIDTH, HEIGHT)
     root["bg"] = "#6b5a45"
 
@@ -332,8 +615,6 @@ def main():
                   activebackground='#6b7a0a',
                   command=lambda: add_clipper(line_xrt.get(),
                                     line_yrt.get(),
-                                    line_xlb.get(),
-                                    line_ylb.get(),
                                     color_clipper_combo.current())
                    )
     draw_clipper_btn.place(relx=0, rely=0.78, relwidth=0.3, relheight=0.05)
@@ -353,8 +634,8 @@ def main():
     cutoff_btn = Button(text="Отсечь",
                   bg='#6b7a0a',
                   activebackground='#6b7a0a',
-                  command=lambda: cut_area(color_res_combo.current(),
-                                           color_clipper_combo.current())
+                  command=lambda: cut_area(color_clipper_combo.current(),
+                                            color_res_combo.current())
                    )
     cutoff_btn.place(relx=0, rely=0.93, relwidth=0.3, relheight=0.05)
 
@@ -364,15 +645,14 @@ def main():
     canvas.place(relx=0.3, rely=0, relwidth=0.7, relheight=1)
     canvas.bind("<Button-1>", lambda event: add_line_by_click(event,
         color_line_combo.current()))
-    canvas.bind("<Button-2>", lambda event: cut_area(color_res_combo.current(),
+    canvas.bind("<Button-2>", lambda event: end_fig(event,
                                            color_clipper_combo.current())
                                            )
     canvas.bind("<Button-3>", lambda event: add_clipper_by_click(event,
                                     color_clipper_combo.current()))
     root.bind("<space>",
-                lambda event: fill(event, type_combo.current(),
-                                    color_combo.current(),
-                                    label_time_2))
+                lambda event: cut_area(color_clipper_combo.current(),
+                                            color_res_combo.current()))
 
     #Меню
     menu = Menu(root)
@@ -393,3 +673,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
