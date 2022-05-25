@@ -41,7 +41,6 @@ X_DOT = 0
 Y_DOT = 1
 
 
-
 dots_for_cir = []
 
 center_pix = (0, 0)
@@ -154,12 +153,34 @@ def add_clipper(x, y, color):
     clipper.append([x2, y2])
     canvas.create_line(x1, y1, x2, y2, fill = clipper_color)
 
+def del_clipper():
+    global lines, clipper, IS_FIRST_DOT_CLIP, IS_END_FIG
+    IS_FIRST_DOT_CLIP = True
+    IS_END_FIG = False
+
+    canvas.delete("all")
+    clipper = []
+
+    for side in lines:
+        if (len(side) != 0):
+            x1 = side[0][0]
+            y1 = side[0][1]
+
+            x2 = side[1][0]
+            y2 = side[1][1]
+
+            color_line = side[2]
+
+
+            canvas.create_line(x1, y1, x2, y2, fill = color_line)
+
 def add_clipper_by_click(event, color):
     global clipper, IS_FIRST_DOT_CLIP, x_first_clip,\
         y_first_clip, center_dot_clip, IS_END_FIG
 
     if IS_END_FIG:
-        del_all_dots()
+        #del_all_dots()
+        del_clipper()
 
     if IS_FIRST_DOT_CLIP:
         x_first_clip = int(event.x)
@@ -256,14 +277,13 @@ def line_koefs(x1, y1, x2, y2):
 
     return a, b, c
 
-
 def solve_lines_intersection(a1, b1, c1, a2, b2, c2):
     opr = a1*b2 - a2*b1
     opr1 = (-c1)*b2 - b1*(-c2)
     opr2 = a1*(-c2) - (-c1)*a2
 
     if (opr == 0):
-        return -5, -5 # прямые параллельны
+        return -5, -5
 
     x = opr1 / opr
     y = opr2 / opr
@@ -275,14 +295,11 @@ def is_coord_between(left_coord, right_coord, dot_coord):
     return (min(left_coord, right_coord) <= dot_coord) \
             and (max(left_coord, right_coord) >= dot_coord)
 
-
 def is_dot_between(dot_left, dot_right, dot_intersec):
     return is_coord_between(dot_left[X_DOT], dot_right[X_DOT], dot_intersec[X_DOT]) \
             and is_coord_between(dot_left[Y_DOT], dot_right[Y_DOT], dot_intersec[Y_DOT])
 
-
 def are_connected_sides(line1, line2):
-
     if ((line1[0][X_DOT] == line2[0][X_DOT]) and (line1[0][Y_DOT] == line2[0][Y_DOT])) \
             or ((line1[1][X_DOT] == line2[1][X_DOT]) and (line1[1][Y_DOT] == line2[1][Y_DOT])) \
             or ((line1[0][X_DOT] == line2[1][X_DOT]) and (line1[0][Y_DOT] == line2[1][Y_DOT])) \
@@ -290,7 +307,6 @@ def are_connected_sides(line1, line2):
         return True
 
     return False
-
 
 
 def extra_check(): # чтобы не было пересечений
@@ -307,7 +323,6 @@ def extra_check(): # чтобы не было пересечений
         line2 = combs_lines[i][1]
 
         if (are_connected_sides(line1, line2)):
-            #print("Connected")
             continue
 
         a1, b1, c1 = line_koefs(line1[0][X_DOT], line1[0][Y_DOT], line1[1][X_DOT], line1[1][Y_DOT])
@@ -325,7 +340,6 @@ def extra_check(): # чтобы не было пересечений
 def check_polygon():
     if (len(clipper) < 3):
         return False
-
     sign = 0
 
     if (vector_mul(get_vector(clipper[1], clipper[2]), get_vector(clipper[0], clipper[1])) > 0):
@@ -338,8 +352,6 @@ def check_polygon():
             return False
 
     check = extra_check()
-
-    #print("\n\nResult:", check, "\n\n")
 
     if (check):
         return False
@@ -411,24 +423,6 @@ def cyrus_beck_algorithm(line, count, color_res):
     if (t_bottom <= t_top):
         canvas.create_line(dot1_res, dot2_res, fill = res_color)
 
-def find_start_dot():
-    y_max = clipper[0][Y_DOT]
-    dot_index = 0
-
-    for i in range(len(clipper)):
-        if (clipper[i][Y_DOT] > y_max):
-            y_max = clipper[i][Y_DOT]
-            dot_index = i
-
-    clipper.pop()
-
-    for _ in range(dot_index):
-        clipper.append(clipper.pop(0))
-
-    clipper.append(clipper[0])
-
-    if (clipper[-2][0] > clipper[1][0]):
-        clipper.reverse()
 
 def cut_area(color_clipper, color_res):
     global IS_END_FIG, clipper
@@ -447,8 +441,6 @@ def cut_area(color_clipper, color_res):
     clipper_color = parse_color(color_clipper)
     canvas.create_polygon(clipper, outline = clipper_color, fill = "#148012")
 
-    find_start_dot()
-
     dot = clipper.pop()
 
     for line in lines:
@@ -456,32 +448,6 @@ def cut_area(color_clipper, color_res):
             cyrus_beck_algorithm(line, len(clipper), color_res)
 
     clipper.append(dot)
-
-def add_paral_line_clipper(event):
-    #print("Pressed: Space", event.x, event.y)
-
-    dif_x = abs(event.x - clipper[len(clipper) - 1][X_DOT])
-    dif_y = abs(event.y - clipper[len(clipper) - 1][Y_DOT])
-
-    if (dif_x > dif_y):
-        add_dot(event.x, clipper[len(clipper) - 1][Y_DOT])
-    else:
-        add_dot(clipper[len(clipper) - 1][X_DOT], event.y)
-
-
-def add_paral_line_line(event):
-    #print("Pressed: Control_L", event.x, event.y)
-
-    cur_line = len(lines) - 1
-
-    if (len(lines[cur_line]) > 0):
-        dif_x = abs(event.x - lines[cur_line][0][X_DOT])
-        dif_y = abs(event.y - lines[cur_line][0][Y_DOT])
-
-        if (dif_x > dif_y):
-            add_line(event.x, lines[cur_line][0][Y_DOT])
-        else:
-            add_line(lines[cur_line][0][X_DOT], event.y)
 
 
 def main():
@@ -622,11 +588,8 @@ def main():
     end_clipper_btn = Button(text="Замкнуть отсекатель",
                   bg='#6b7a0a',
                   activebackground='#6b7a0a',
-                  command=lambda: add_clipper(line_xrt.get(),
-                                    line_yrt.get(),
-                                    line_xlb.get(),
-                                    line_ylb.get(),
-                                    color_clipper_combo.current())
+                  command=lambda: end_fig(1,
+                                           color_clipper_combo.current())
                    )
     end_clipper_btn.place(relx=0, rely=0.84, relwidth=0.3, relheight=0.05)
 
@@ -673,7 +636,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
 
