@@ -799,11 +799,9 @@ def main():
     add_dot_btn = Button(text="Добавить вершину",
                   bg='#6b7a0a',
                   activebackground='#6b7a0a',
-                  command=lambda: add_line(line_x1.get(),
-                                    line_y1.get(),
-                                    line_x2.get(),
-                                    line_y2.get(),
-                                    color_line_combo.current())
+                  command=lambda: add_fig(line_x1.get(), line_y1.get(),
+                                    color_line_combo.current(),
+                                    color_clipper_combo.current())
                    )
     add_dot_btn.place(relx=0, rely=0.57, relwidth=0.3, relheight=0.05)
 
