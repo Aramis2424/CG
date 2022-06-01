@@ -388,10 +388,6 @@ def end_fig(event, color):
 
 #---------------------------------------------------------------------------------------
 
-
-
-# Algorithm
-
 def get_vector(dot1, dot2):
     return [dot2[X_DOT] - dot1[X_DOT], dot2[Y_DOT] - dot1[Y_DOT]]
 
@@ -475,7 +471,7 @@ def extra_check(object): # чтобы не было пересечений
     return False
 
 
-def check_polygon(): # через проход по всем точкам, поворот которых должен быть все время в одну сторону
+def check_polygon():
     if (len(clipper) < 3):
         return False
 

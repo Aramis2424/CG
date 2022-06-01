@@ -67,7 +67,7 @@ STEP_SPIN_BOX = 0.1
 DEFAULT_SCALE = 45
 DEFAULT_ANGLE = 30
 
-# For spins
+# Для вращения
 trans_matrix = []
 
 def del_all_dots():
@@ -91,11 +91,11 @@ def parse_funcs(func_num):
     if (func_num == 0):
         func = lambda x, z: sin(x)**2 + cos(z)**2
     elif (func_num == 1):
-        func = lambda x, z: sin(cos(x)) * sin(z)
+        func = lambda x, z: 2*sin(x) * sin(z)
     elif (func_num == 2):
         func = lambda x, z: sin(x) - cos(z)
     elif (func_num == 3):
-        func = lambda x, z: cos(x) * cos(sin(z))
+        func = lambda x, z: cos(x) * cos(z)
     return func
 
 def get_fill_check_color(collor_fill):
@@ -394,9 +394,9 @@ def main():
     font_combo = ("Times", 12)
 
     func_list = ("y = sin^2(x) + cos^2(z)",
-                 "y = sin(cos(x)) * sin(z)",
+                 "y = 2*sin(x) * sin(z)",
                  "y = sin(x) - cos(x)",
-                 "y = cos(x) * cos(sin(z))")
+                 "y = cos(x) * cos(z)")
 
     # Выбор цвета результата
     label_color = Label(text="Цвет результата:", bg="#6b7a0a", anchor='w')
